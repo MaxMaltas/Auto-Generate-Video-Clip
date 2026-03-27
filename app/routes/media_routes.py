@@ -1,0 +1,56 @@
+from flask import Blueprint, request, jsonify, send_from_directory, send_file
+from app.core.config import INPUT, OUTPUT
+from app.services.file_service import (
+    save_uploaded_file, list_photos, list_clips, build_clips_zip
+)
+from app.services.pauta_service import load_pauta, save_pauta
+from app.services.doc_service import build_pauta_docx
+
+media_bp = Blueprint("media", __name__)
+
+@media_bp.route("/upload", methods=["POST"])
+def upload():
+    f = request.files.get("file")
+    save_uploaded_file(f)
+    return jsonify({"ok": True})
+
+@media_bp.route("/fotos")
+def fotos():
+    return jsonify(list_photos())
+
+@media_bp.route("/thumb/<nombre>")
+def thumb(nombre):
+    return send_from_directory(INPUT, nombre)
+
+@media_bp.route("/pauta", methods=["GET", "POST"])
+def pauta():
+    if request.method == "POST":
+        save_pauta(request.get_json())
+        return jsonify({"ok": True})
+    return jsonify(load_pauta())
+
+@media_bp.route("/clips")
+def clips():
+    return jsonify(list_clips())
+
+@media_bp.route("/clip/<nombre>")
+def clip(nombre):
+    return send_from_directory(OUTPUT, nombre)
+
+@media_bp.route("/zip")
+def zip_clips():
+    return send_file(
+        build_clips_zip(),
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name="clips.zip"
+    )
+
+@media_bp.route("/pauta/docx")
+def pauta_docx():
+    return send_file(
+        build_pauta_docx(),
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        as_attachment=True,
+        download_name="pauta.docx"
+    )

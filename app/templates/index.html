@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ProductoraClips</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0f13;--card:#1a1a22;--border:#2a2a38;--accent:#6c6cff;--accent2:#4ecca3;--text:#e8e8f0;--muted:#7a7a9a;--red:#ff6b6b;--green:#4ecca3;--yellow:#ffd93d}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;min-height:100vh}
+header{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}
+header h1{font-size:1.2rem;font-weight:600;letter-spacing:-.02em}
+header span{font-size:.75rem;color:var(--muted);background:var(--border);padding:2px 8px;border-radius:20px}
+.tabs{display:flex;gap:2px;padding:1.5rem 2rem .5rem;border-bottom:1px solid var(--border)}
+.tab{padding:8px 20px;border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;color:var(--muted);border:1px solid transparent;border-bottom:none;transition:all .15s}
+.tab.active{background:var(--card);color:var(--text);border-color:var(--border)}
+.panel{display:none;padding:2rem;max-width:1100px}
+.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+.card h2{font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--text)}
+h3{font-size:.85rem;color:var(--muted);font-weight:500;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em}
+.btn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:500;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
+.btn-success{background:var(--green);color:#0f0f13}.btn-success:hover{opacity:.85}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-ghost{background:var(--border);color:var(--text)}.btn-ghost:hover{background:#333348}
+.btn:disabled{opacity:.4;cursor:default}
+input,select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:14px;font-family:inherit;width:100%;transition:border-color .15s}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-ok{background:rgba(78,204,163,.15);color:var(--green)}
+.badge-err{background:rgba(255,107,107,.15);color:var(--red)}
+.badge-pending{background:rgba(255,217,61,.15);color:var(--yellow)}
+.badge-running{background:rgba(108,108,255,.15);color:var(--accent)}
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:3rem;text-align:center;cursor:pointer;transition:all .2s;color:var(--muted)}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:rgba(108,108,255,.05);color:var(--text)}
+.drop-zone input[type=file]{display:none}
+.thumb{width:56px;height:40px;object-fit:cover;border-radius:6px;background:var(--border)}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:.5rem}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;border-radius:2px}
+.log-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:monospace;font-size:12px;max-height:200px;overflow-y:auto;color:var(--muted)}
+.log-box .ok{color:var(--green)}.log-box .err{color:var(--red)}.log-box .info{color:var(--accent)}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+.preview-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .2s}
+.preview-card:hover{border-color:var(--accent)}
+.preview-card video{width:100%;display:block;background:#000}
+.preview-card .info{padding:.75rem;font-size:13px}
+.preview-card .info strong{display:block;margin-bottom:2px}
+.preview-card .info span{color:var(--muted);font-size:12px}
+.preview-card .actions{padding:0 .75rem .75rem;display:flex;gap:6px}
+.row{display:flex;gap:1rem;align-items:center}
+.flex-1{flex:1}
+#status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px}
+#status-dot.running{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🎬 ProductoraClips</h1>
+  </div>
+  <span id="status-dot"></span>
+  <span id="status-text" style="font-size:13px;color:var(--muted)">Listo</span>
+  <div style="margin-left:auto;font-size:13px;color:var(--muted)" id="ip-label"></div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('pauta')">📋 Pauta</div>
+  <div class="tab" onclick="showTab('generar')">⚙️ Generar</div>
+  <div class="tab" onclick="showTab('clips')">🎬 Clips</div>
+</div>
+
+<!-- TAB: PAUTA -->
+<div class="panel active" id="tab-pauta">
+  <div class="card">
+    <h2>Subir fotos</h2>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" multiple accept="image/*" onchange="subirFotos(this.files)">
+      <div style="font-size:2rem;margin-bottom:.5rem">📁</div>
+      <div style="font-weight:500;margin-bottom:.25rem">Arrastra las fotos aquí</div>
+      <div style="font-size:13px">o haz clic para seleccionar</div>
+    </div>
+    <div id="upload-progress" style="display:none;margin-top:1rem">
+      <div style="font-size:13px;color:var(--muted)" id="upload-status">Subiendo...</div>
+      <div class="progress-bar"><div class="progress-fill" id="upload-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Pauta del día</h2>
+    <div style="display:flex;gap:.75rem;margin-bottom:1rem">
+      <button class="btn btn-ghost" onclick="addRow()">+ Añadir entrada</button>
+      <button class="btn btn-ghost" onclick="cargarFotos()">↻ Actualizar fotos</button>
+      <button class="btn btn-ghost" onclick="descargarPautaDocx()">⬇ Descargar pauta Word</button>
+      <button class="btn btn-success" onclick="guardarPauta()" style="margin-left:auto">Guardar pauta</button>
+    </div>
+    <table id="pauta-table">
+      <thead><tr>
+        <th style="width:60px">#</th>
+        <th style="width:120px">Nombre</th>
+        <th>Texto</th>
+        <th style="width:200px">Foto</th>
+        <th style="width:100px">Preview</th>
+        <th style="width:50px"></th>
+      </tr></thead>
+      <tbody id="pauta-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TAB: GENERAR -->
+<div class="panel" id="tab-generar">
+  <div class="card">
+    <h2>Estado del proceso</h2>
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem">
+      <button class="btn btn-primary" id="btn-generar" onclick="generarClips()">▶ Generar todos los clips</button>
+      <div id="gen-stats" style="font-size:14px;color:var(--muted)"></div>
+    </div>
+    <div class="progress-bar" style="height:6px;margin-bottom:1rem">
+      <div class="progress-fill" id="gen-fill" style="width:0%"></div>
+    </div>
+    <div class="log-box" id="log-box">
+      <span class="info">Esperando...</span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: CLIPS -->
+<div class="panel" id="tab-clips">
+  <div class="card">
+    <h2>Clips exportados</h2>
+    <div style="display:flex;gap:.75rem;margin-bottom:1rem">
+      <button class="btn btn-ghost" onclick="cargarClips()">↻ Actualizar</button>
+      <button class="btn btn-ghost" onclick="descargarTodos()">⬇ Descargar todos (ZIP)</button>
+    </div>
+    <div class="preview-grid" id="clips-grid">
+      <div style="color:var(--muted);font-size:14px;padding:1rem">Aún no hay clips. Genera primero desde la pestaña ⚙️.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let fotosDisponibles = [];
+let pautaData = [];
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','generar','clips'][i]===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='clips') cargarClips();
+  if(id==='pauta') cargarFotos();
+}
+
+// ── DRAG & DROP ──
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');subirFotos(e.dataTransfer.files)});
+
+async function subirFotos(files) {
+  if(!files.length) return;
+  const prog = document.getElementById('upload-progress');
+  const stat = document.getElementById('upload-status');
+  const fill = document.getElementById('upload-fill');
+  prog.style.display='block';
+  for(let i=0;i<files.length;i++) {
+    stat.textContent = `Subiendo ${i+1}/${files.length}: ${files[i].name}`;
+    fill.style.width = ((i/files.length)*100)+'%';
+    const fd = new FormData();
+    fd.append('file', files[i]);
+    await fetch('/upload', {method:'POST', body:fd});
+  }
+  fill.style.width='100%';
+  stat.textContent = `✓ ${files.length} fotos subidas`;
+  setTimeout(()=>prog.style.display='none', 2000);
+  cargarFotos();
+}
+
+async function cargarFotos() {
+  const r = await fetch('/fotos');
+  fotosDisponibles = await r.json();
+  renderPauta();
+}
+
+function renderPauta() {
+  const tbody = document.getElementById('pauta-body');
+  if(!pautaData.length) pautaData = [{numero:'01',nombre:'',texto:'',foto:''}];
+  tbody.innerHTML = pautaData.map((row,i)=>`
+    <tr>
+      <td><input value="${row.numero}" style="width:50px;text-align:center" onchange="pautaData[${i}].numero=this.value"></td>
+      <td><input value="${row.nombre}" placeholder="Nombre completo" onchange="pautaData[${i}].nombre=this.value.toUpperCase()"></td>
+      <td><input value="${row.texto || ''}"placeholder="Texto opcional" onchange="pautaData[${i}].texto=this.value"></td>
+      <td>
+        <select onchange="pautaData[${i}].foto=this.value;updateThumb(${i},this.value)">
+          <option value="">— selecciona foto —</option>
+          ${fotosDisponibles.map(f=>`<option value="${f}" ${f===row.foto?'selected':''}>${f}</option>`).join('')}
+        </select>
+      </td>
+      <td><img id="thumb-${i}" class="thumb" src="${row.foto?'/thumb/'+row.foto:''}" style="display:${row.foto?'block':'none'}"></td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" onclick="removeRow(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function updateThumb(i, foto) {
+  const img = document.getElementById('thumb-'+i);
+  if(foto){img.src='/thumb/'+foto;img.style.display='block';}
+  else img.style.display='none';
+}
+
+function addRow() {
+  const last = pautaData[pautaData.length - 1];
+
+  let nextNum = '01';
+
+  if (last && last.numero) {
+    const num = parseInt(last.numero, 10);
+    if (!isNaN(num)) {
+      nextNum = String(num + 1).padStart(2, '0');
+    }
+  }
+
+  pautaData.push({
+    numero: nextNum,
+    nombre: '',
+    texto: '',
+    foto: ''
+  });
+  renderPauta();
+}
+
+
+function removeRow(i) {
+  pautaData.splice(i,1);
+  renderPauta();
+}
+
+function descargarPautaDocx() {
+  window.location = '/pauta/docx';
+}
+
+async function guardarPauta() {
+  const r = await fetch('/pauta', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(pautaData)});
+  const d = await r.json();
+  if(d.ok) showToast('Pauta guardada ✓');
+  else showToast('Error: '+d.error, true);
+}
+
+// ── GENERAR ──
+async function generarClips() {
+  await guardarPauta();
+  const btn = document.getElementById('btn-generar');
+  btn.disabled = true;
+  document.getElementById('log-box').innerHTML = '<span class="info">Iniciando...</span>';
+  document.getElementById('gen-fill').style.width = '0%';
+  await fetch('/generar', {method:'POST'});
+  pollEstado();
+}
+
+function pollEstado() {
+  const interval = setInterval(async()=>{
+    const r = await fetch('/estado');
+    const d = await r.json();
+    const dot = document.getElementById('status-dot');
+    const stxt = document.getElementById('status-text');
+    const fill = document.getElementById('gen-fill');
+    const stats = document.getElementById('gen-stats');
+    const log = document.getElementById('log-box');
+
+    if(d.running){dot.className='running';stxt.textContent='Procesando...';}
+    else{dot.className='';stxt.textContent='Listo';}
+
+    const pct = d.total>0 ? Math.round((d.done/d.total)*100) : 0;
+    fill.style.width = pct+'%';
+    stats.textContent = d.total>0 ? `${d.done}/${d.total} clips · ${d.errors} errores` : '';
+
+    log.innerHTML = d.log.map(l=>`<div class="${l.startsWith('✓')?'ok':l.startsWith('✗')?'err':'info'}">${l}</div>`).join('');
+    log.scrollTop = log.scrollHeight;
+
+    if(!d.running){
+      clearInterval(interval);
+      document.getElementById('btn-generar').disabled=false;
+      if(d.done>0) showToast(`${d.done} clips generados ✓`);
+    }
+  }, 800);
+}
+
+// ── CLIPS ──
+async function cargarClips() {
+  const r = await fetch('/clips');
+  const clips = await r.json();
+  const grid = document.getElementById('clips-grid');
+  if(!clips.length){grid.innerHTML='<div style="color:var(--muted);font-size:14px;padding:1rem">Aún no hay clips.</div>';return;}
+  grid.innerHTML = clips.map(c=>`
+    <div class="preview-card">
+      <video src="/clip/${c}" controls preload="metadata" style="max-height:130px"></video>
+      <div class="info">
+        <strong>${c}</strong>
+        <span>MP4 · 10s · 1920×1080</span>
+      </div>
+      <div class="actions">
+        <a href="/clip/${c}" download class="btn btn-ghost" style="font-size:12px;padding:5px 10px;text-decoration:none">⬇ Descargar</a>
+      </div>
+    </div>`).join('');
+}
+
+async function descargarTodos() {
+  window.location = '/zip';
+}
+
+function showToast(msg, err=false) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style,{position:'fixed',bottom:'2rem',right:'2rem',background:err?'var(--red)':'var(--green)',color:'#0f0f13',padding:'10px 20px',borderRadius:'8px',fontWeight:'500',fontSize:'14px',zIndex:999,boxShadow:'0 4px 20px rgba(0,0,0,.4)'});
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+// Mostrar IP local
+fetch('/info').then(r=>r.json()).then(d=>{
+  document.getElementById('ip-label').textContent = '🌐 '+d.ip+':8080';
+});
+
+cargarFotos();
+</script>
+</body>
+</html>
