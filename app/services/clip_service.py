@@ -1,4 +1,4 @@
-import json
+import re
 import threading
 import ffmpeg
 
@@ -9,15 +9,33 @@ from app.core.config import (
 from app.core.state import estado
 from app.services.pauta_service import get_valid_rows
 
+_lock = threading.Lock()
+
+_SAFE_CHARS = re.compile(r"[^\w\-. ]|[/\\]", re.UNICODE)
+
+def _safe_name(value: str) -> str:
+    """Remove characters that could cause path traversal or shell injection.
+
+    Preserves word characters, hyphens, dots, and spaces.  Path separators are
+    explicitly removed and ``..`` sequences are collapsed in a loop to prevent
+    bypass via strings like ``....``.
+    """
+    sanitized = _SAFE_CHARS.sub("", value).strip()
+    # Loop to handle bypass attempts like '....' -> '..' after one pass
+    while ".." in sanitized:
+        sanitized = sanitized.replace("..", "")
+    return sanitized.strip()
+
 def start_generation():
-    if estado["running"]:
-        return False
+    with _lock:
+        if estado["running"]:
+            return False
+        estado["running"] = True
     threading.Thread(target=run_make_clips, daemon=True).start()
     return True
 
 def run_make_clips():
     estado.update({
-        "running": True,
         "log": [],
         "done": 0,
         "errors": 0,
@@ -40,9 +58,21 @@ def run_make_clips():
     estado["running"] = False
 
 def procesar_clip(row):
-    numero = row["numero"].zfill(2)
-    nombre = row["nombre"].upper()
-    foto_path = INPUT / row["foto"]
+    numero = _safe_name(row["numero"]).zfill(2)
+    nombre = _safe_name(row["nombre"].upper())
+
+    if not numero or not nombre:
+        estado["log"].append(f'✗ Datos inválidos en fila: {row}')
+        estado["errors"] += 1
+        return
+
+    foto_filename = _safe_name(row["foto"])
+    if not foto_filename:
+        estado["log"].append(f'✗ Nombre de foto inválido: {row["foto"]}')
+        estado["errors"] += 1
+        return
+
+    foto_path = INPUT / foto_filename
     salida = OUTPUT / f"{numero} {nombre}.mp4"
 
     estado["log"].append(f"→ [{numero}] {nombre}...")
