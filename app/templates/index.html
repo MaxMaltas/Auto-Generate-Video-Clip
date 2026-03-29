@@ -72,6 +72,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 <div class="tabs">
   <div class="tab active" onclick="showTab('pauta')">📋 Pauta</div>
+  <div class="tab" onclick="showTab('editor')">🖼 Editor</div>
   <div class="tab" onclick="showTab('generar')">⚙️ Generar</div>
   <div class="tab" onclick="showTab('clips')">🎬 Clips</div>
 </div>
@@ -114,6 +115,89 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+
+
+<!-- TAB: EDITOR -->
+<div class="panel" id="tab-editor">
+  <div style="display:grid;grid-template-columns:1fr 260px;gap:1.5rem;align-items:start">
+
+    <div class="card" style="margin-bottom:0">
+      <h2>Vista previa (1920×1080)</h2>
+      <div style="margin-bottom:.75rem;display:flex;gap:.5rem;align-items:center">
+        <select id="foto-select" style="flex:1" onchange="cargarFotoEditor(this.value)">
+          <option value="">— selecciona una foto —</option>
+        </select>
+      </div>
+      <div id="editor-canvas" style="position:relative;width:100%;padding-top:56.25%;background:#111;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+        <div id="editor-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px">
+          Selecciona una foto para editar
+        </div>
+        <img id="editor-img" style="position:absolute;display:none;cursor:move;user-select:none" draggable="false">
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="card" style="margin-bottom:0">
+        <h2>Ajustes</h2>
+
+        <div style="margin-bottom:1rem">
+          <h3>Escala</h3>
+          <input type="range" id="sl-scale" min="10" max="300" value="100"
+                 style="width:100%;accent-color:var(--accent)"
+                 oninput="aplicarEscala(this.value)">
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Valor: <span id="lbl-scale">100%</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <h3>Posición X</h3>
+          <input type="range" id="sl-x" min="0" max="100" value="50"
+                 style="width:100%;accent-color:var(--accent)"
+                 oninput="aplicarPos()">
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Valor: <span id="lbl-x">50%</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <h3>Posición Y</h3>
+          <input type="range" id="sl-y" min="0" max="100" value="50"
+                 style="width:100%;accent-color:var(--accent)"
+                 oninput="aplicarPos()">
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Valor: <span id="lbl-y">50%</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <h3>Marco (px)</h3>
+          <input type="number" id="borde-px" value="15" min="0" max="50" style="width:100%">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <button class="btn btn-ghost" onclick="centrarFoto()">Centrar</button>
+          <button class="btn btn-ghost" onclick="ajustarFill()">Llenar (Fill)</button>
+          <button class="btn btn-ghost" onclick="ajustarFit()">Ajustar (Fit)</button>
+          <button class="btn btn-ghost" onclick="guardarAjusteEditor()">Guardar ajuste</button>
+          <button class="btn btn-primary" onclick="procesarFoto()">▶ Procesar esta foto</button>
+          <button class="btn btn-success" onclick="procesarTodas()">▶ Procesar todas</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <h2>Estado fotos</h2>
+        <div id="editor-estado" style="font-size:13px;color:var(--muted)">Sin fotos cargadas</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <h2>Log</h2>
+    <div class="log-box" id="editor-log"><span class="info">Esperando...</span></div>
+  </div>
+</div>
+
 <!-- TAB: GENERAR -->
 <div class="panel" id="tab-generar">
   <div class="card">
@@ -150,11 +234,12 @@ let fotosDisponibles = [];
 let pautaData = [];
 
 function showTab(id) {
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','generar','clips'][i]===id));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','editor','generar','clips'][i]===id));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(id==='clips') cargarClips();
   if(id==='pauta') cargarFotos();
+  if(id==='editor') initEditor();
 }
 
 // ── DRAG & DROP ──
@@ -327,6 +412,192 @@ fetch('/info').then(r=>r.json()).then(d=>{
 });
 
 cargarFotos();
+
+// ── EDITOR ────────────────────────────────────────────────────────────────────
+
+let ed = {};           // estado del editor
+let edAjustes = {};    // ajustes guardados por foto
+
+async function initEditor() {
+  const fotos = await fetch('/fotos').then(r => r.json());
+  const sel = document.getElementById('foto-select');
+  sel.innerHTML = '<option value="">— selecciona una foto —</option>' +
+    fotos.map(f => `<option value="${f}">${f}</option>`).join('');
+  renderEditorEstado(fotos);
+}
+
+function renderEditorEstado(fotos) {
+  const el = document.getElementById('editor-estado');
+  if (!fotos.length) { el.textContent = 'Sin fotos cargadas'; return; }
+  el.innerHTML = fotos.map(f => {
+    const ok = !!edAjustes[f];
+    return `<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+      <span style="color:${ok ? 'var(--green)' : 'var(--muted)'}">${ok ? '✓' : '○'}</span>
+      <span style="font-size:11px;white-space:nowrap;overflow:hidden;
+                   text-overflow:ellipsis;max-width:160px" title="${f}">${f}</span>
+    </div>`;
+  }).join('');
+}
+
+function cargarFotoEditor(nombre) {
+  if (!nombre) return;
+  const img = document.getElementById('editor-img');
+  const ph  = document.getElementById('editor-placeholder');
+  img.style.display = 'none';
+  ph.style.display  = 'flex';
+
+  img.onload = () => {
+    ed = { foto: nombre, nw: img.naturalWidth, nh: img.naturalHeight,
+           scale: 100, x: 50, y: 50 };
+    if (edAjustes[nombre]) {
+      const a = edAjustes[nombre];
+      ed.scale = a.scale * 100; ed.x = a.x; ed.y = a.y;
+    }
+    ph.style.display  = 'none';
+    img.style.display = 'block';
+    syncSliders(); applyTransform();
+  };
+  img.src = '/thumb/' + encodeURIComponent(nombre) + '?t=' + Date.now();
+}
+
+function applyTransform() {
+  const img  = document.getElementById('editor-img');
+  const wrap = document.getElementById('editor-canvas');
+  if (!ed.foto) return;
+  const ratio = wrap.clientWidth / 1920;
+  const sf    = (ed.scale / 100) * ratio;
+  const dw    = ed.nw * sf, dh = ed.nh * sf;
+  const cx    = (ed.x / 100) * wrap.clientWidth;
+  const cy    = (ed.y / 100) * wrap.clientHeight;
+  img.style.width  = dw + 'px';
+  img.style.height = dh + 'px';
+  img.style.left   = (cx - dw / 2) + 'px';
+  img.style.top    = (cy - dh / 2) + 'px';
+}
+
+function syncSliders() {
+  document.getElementById('sl-scale').value = Math.round(ed.scale);
+  document.getElementById('sl-x').value     = ed.x;
+  document.getElementById('sl-y').value     = ed.y;
+  document.getElementById('lbl-scale').textContent = Math.round(ed.scale) + '%';
+  document.getElementById('lbl-x').textContent     = Math.round(ed.x) + '%';
+  document.getElementById('lbl-y').textContent     = Math.round(ed.y) + '%';
+}
+
+function aplicarEscala(v) {
+  ed.scale = parseFloat(v);
+  document.getElementById('lbl-scale').textContent = Math.round(v) + '%';
+  applyTransform();
+}
+
+function aplicarPos() {
+  ed.x = parseFloat(document.getElementById('sl-x').value);
+  ed.y = parseFloat(document.getElementById('sl-y').value);
+  document.getElementById('lbl-x').textContent = Math.round(ed.x) + '%';
+  document.getElementById('lbl-y').textContent = Math.round(ed.y) + '%';
+  applyTransform();
+}
+
+function centrarFoto() { ed.x = 50; ed.y = 50; syncSliders(); applyTransform(); }
+
+function ajustarFill() {
+  if (!ed.foto) return;
+  ed.scale = Math.max(1920 / ed.nw, 1080 / ed.nh) * 100;
+  ed.x = 50; ed.y = 50; syncSliders(); applyTransform();
+}
+
+function ajustarFit() {
+  if (!ed.foto) return;
+  ed.scale = Math.min(1920 / ed.nw, 1080 / ed.nh) * 100;
+  ed.x = 50; ed.y = 50; syncSliders(); applyTransform();
+}
+
+function guardarAjusteEditor() {
+  if (!ed.foto) return;
+  edAjustes[ed.foto] = { x: ed.x, y: ed.y, scale: ed.scale / 100 };
+}
+
+// Drag con ratón
+(function(){
+  let drag = false, sx, sy, sex, sey;
+  document.addEventListener('mousedown', e => {
+    if (e.target !== document.getElementById('editor-img')) return;
+    drag = true; sx = e.clientX; sy = e.clientY; sex = ed.x; sey = ed.y;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!drag) return;
+    const w = document.getElementById('editor-canvas');
+    ed.x = Math.max(0, Math.min(100, sex + (e.clientX - sx) / w.clientWidth  * 100));
+    ed.y = Math.max(0, Math.min(100, sey + (e.clientY - sy) / w.clientHeight * 100));
+    syncSliders(); applyTransform();
+  });
+  document.addEventListener('mouseup', () => { drag = false; });
+})();
+
+// Scroll para escalar
+document.addEventListener('wheel', e => {
+  if (e.target !== document.getElementById('editor-img')) return;
+  e.preventDefault();
+  ed.scale = Math.max(10, Math.min(300, ed.scale - e.deltaY * 0.1));
+  syncSliders(); applyTransform();
+}, { passive: false });
+
+async function procesarFoto() {
+  if (!ed.foto) { showToast('Selecciona una foto primero', true); return; }
+  guardarAjusteEditor();
+  const borde = parseInt(document.getElementById('borde-px').value) || 15;
+  const log   = document.getElementById('editor-log');
+  log.innerHTML = `<span class="info">Procesando ${ed.foto}...</span>`;
+
+  const r = await fetch('/procesar_foto', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ foto: ed.foto, x: ed.x, y: ed.y,
+                           scale: ed.scale / 100, borde })
+  });
+  const d = await r.json();
+
+  if (d.ok) {
+    log.innerHTML += `<div class="ok">✓ ${d.resultado} generado</div>`;
+    showToast('Foto procesada: ' + d.resultado);
+    initEditor();
+  } else {
+    log.innerHTML += `<div class="err">✗ ${d.error}</div>`;
+    showToast('Error: ' + d.error, true);
+  }
+}
+
+async function procesarTodas() {
+  const fotos = await fetch('/fotos').then(r => r.json());
+  const borde = parseInt(document.getElementById('borde-px').value) || 15;
+  const log   = document.getElementById('editor-log');
+  guardarAjusteEditor();
+
+  const payload = fotos.map(f => {
+    const a = edAjustes[f] || { x: 50, y: 50, scale: 1.0 };
+    return { foto: f, x: a.x, y: a.y, scale: a.scale, borde };
+  });
+
+  log.innerHTML = `<span class="info">Procesando ${fotos.length} fotos...</span>`;
+
+  const res  = await fetch('/procesar_todas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+
+  data.resultados.forEach(item => {
+    log.innerHTML += item.ok
+      ? `<div class="ok">✓ ${item.resultado}</div>`
+      : `<div class="err">✗ ${item.foto}: ${item.error}</div>`;
+  });
+
+  showToast(`${data.total}/${fotos.length} fotos procesadas`);
+  log.scrollTop = log.scrollHeight;
+  initEditor();
+}
 </script>
 </body>
 </html>

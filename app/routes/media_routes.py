@@ -5,6 +5,7 @@ from app.services.file_service import (
 )
 from app.services.pauta_service import load_pauta, save_pauta
 from app.services.doc_service import build_pauta_docx
+from app.services.photo_service import procesar_foto, procesar_lote
 
 media_bp = Blueprint("media", __name__)
 
@@ -54,3 +55,23 @@ def pauta_docx():
         as_attachment=True,
         download_name="pauta.docx"
     )
+
+@media_bp.route("/procesar_foto", methods=["POST"])
+def procesar_foto_route():
+    data = request.get_json()
+    result = procesar_foto(
+        nombre = data["foto"],
+        x_pct  = float(data.get("x", 50)),
+        y_pct  = float(data.get("y", 50)),
+        scale  = float(data.get("scale", 1.0)),
+        borde  = int(data.get("borde", 15))
+    )
+    return jsonify(result)
+
+
+@media_bp.route("/procesar_todas", methods=["POST"])
+def procesar_todas_route():
+    items = request.get_json()
+    resultados = procesar_lote(items)
+    ok = sum(1 for r in resultados if r.get("ok"))
+    return jsonify({"ok": True, "resultados": resultados, "total": ok})
