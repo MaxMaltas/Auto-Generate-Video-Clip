@@ -12,7 +12,10 @@ media_bp = Blueprint("media", __name__)
 @media_bp.route("/upload", methods=["POST"])
 def upload():
     f = request.files.get("file")
-    save_uploaded_file(f)
+    try:
+        save_uploaded_file(f)
+    except ValueError as e:
+        return jsonify({"ok": False, "msg": str(e)}), 400
     return jsonify({"ok": True})
 
 @media_bp.route("/fotos")
@@ -26,7 +29,10 @@ def thumb(nombre):
 @media_bp.route("/pauta", methods=["GET", "POST"])
 def pauta():
     if request.method == "POST":
-        save_pauta(request.get_json())
+        data = request.get_json()
+        if not isinstance(data, list):
+            return jsonify({"ok": False, "msg": "Se esperaba una lista JSON"}), 400
+        save_pauta(data)
         return jsonify({"ok": True})
     return jsonify(load_pauta())
 

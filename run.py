@@ -1,3 +1,4 @@
+import os
 import socket
 import webbrowser
 from app import create_app
@@ -23,5 +24,6 @@ if __name__ == "__main__":
     print("\n   Comparte la URL de Red con el redactor.")
     print("   Ctrl+C para cerrar.\n")
 
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
     webbrowser.open("http://localhost:8080")
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=debug)
