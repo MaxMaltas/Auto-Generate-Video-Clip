@@ -1,0 +1,4 @@
+flask
+ffmpeg-python
+python-docx
+pillow
