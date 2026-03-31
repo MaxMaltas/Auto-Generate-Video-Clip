@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, send_from_directory, send_file
-from app.core.config import INPUT, OUTPUT
+from app.core.config import INPUT, OUTPUT, PAUTA_FILE
 from app.services.file_service import (
     save_uploaded_file, list_photos, list_clips, build_clips_zip
 )
@@ -33,8 +33,15 @@ def pauta():
         if not isinstance(data, list):
             return jsonify({"ok": False, "msg": "Se esperaba una lista JSON"}), 400
         save_pauta(data)
-        return jsonify({"ok": True})
-    return jsonify(load_pauta())
+        mtime = PAUTA_FILE.stat().st_mtime if PAUTA_FILE.exists() else 0
+        return jsonify({"ok": True, "mtime": mtime})
+    mtime = PAUTA_FILE.stat().st_mtime if PAUTA_FILE.exists() else 0
+    return jsonify({"data": load_pauta(), "mtime": mtime})
+
+@media_bp.route("/pauta/mtime")
+def pauta_mtime():
+    mtime = PAUTA_FILE.stat().st_mtime if PAUTA_FILE.exists() else 0
+    return jsonify({"mtime": mtime})
 
 @media_bp.route("/clips")
 def clips():

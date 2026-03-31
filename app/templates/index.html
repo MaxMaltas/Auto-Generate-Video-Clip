@@ -58,6 +58,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
 #status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px}
 #status-dot.running{background:var(--accent);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+#sync-indicator{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-left:auto}
+#sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;transition:background .3s}
+#sync-dot.syncing{background:var(--yellow);animation:pulse 0.6s infinite}
+#sync-dot.remote{background:var(--accent);animation:pulse 0.8s infinite}
 </style>
 </head>
 <body>
@@ -67,7 +71,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
   <span id="status-dot"></span>
   <span id="status-text" style="font-size:13px;color:var(--muted)">Listo</span>
-  <div style="margin-left:auto;font-size:13px;color:var(--muted)" id="ip-label"></div>
+  <div id="sync-indicator">
+    <span id="sync-dot"></span>
+    <span id="sync-label">Sincronizado</span>
+  </div>
+  <div style="margin-left:1.5rem;font-size:13px;color:var(--muted)" id="ip-label"></div>
 </header>
 
 <div class="tabs">
@@ -100,7 +108,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-ghost" onclick="addRow()">+ Añadir entrada</button>
       <button class="btn btn-ghost" onclick="cargarFotos()">↻ Actualizar fotos</button>
       <button class="btn btn-ghost" onclick="descargarPautaDocx()">⬇ Descargar pauta Word</button>
-      <button class="btn btn-success" onclick="guardarPauta()" style="margin-left:auto">Guardar pauta</button>
+      <button class="btn btn-success" onclick="guardarPautaManual()" style="margin-left:auto">Guardar pauta</button>
     </div>
     <table id="pauta-table">
       <thead><tr>
@@ -134,6 +142,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
           Selecciona una foto para editar
         </div>
         <img id="editor-img" style="position:absolute;display:none;cursor:move;user-select:none" draggable="false">
+        <!-- Guías horizontales a 96px (8.889% y 91.111% del canvas 1080px) -->
+        <div style="position:absolute;left:0;right:0;top:8.889%;height:1px;background:rgba(255,217,61,.7);pointer-events:none;z-index:10">
+          <span style="position:absolute;right:6px;top:-14px;font-size:10px;color:#ffd93d;font-family:monospace">96px</span>
+        </div>
+        <div style="position:absolute;left:0;right:0;top:91.111%;height:1px;background:rgba(255,217,61,.7);pointer-events:none;z-index:10">
+          <span style="position:absolute;right:6px;top:3px;font-size:10px;color:#ffd93d;font-family:monospace">96px</span>
+        </div>
       </div>
     </div>
 
@@ -290,6 +305,55 @@ tr:hover td{background:rgba(255,255,255,.02)}
 let fotosDisponibles = [];
 let pautaData = [];
 
+// ── SYNC STATE ──
+let lastKnownMtime = 0;
+let isEditing = false;
+let editingTimeout = null;
+let autoSaveTimer = null;
+let syncPollInterval = null;
+
+function markEditing() {
+  isEditing = true;
+  clearTimeout(editingTimeout);
+  editingTimeout = setTimeout(() => { isEditing = false; }, 5000);
+}
+
+function setSyncStatus(state) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  dot.className = state === 'ok' ? '' : state;
+  if (state === 'ok')      { dot.style.background = 'var(--green)';  label.textContent = 'Sincronizado'; }
+  if (state === 'syncing') { dot.style.background = 'var(--yellow)'; label.textContent = 'Guardando...'; }
+  if (state === 'remote')  { dot.style.background = 'var(--accent)'; label.textContent = 'Actualizando...'; }
+}
+
+function startSyncPolling() {
+  if (syncPollInterval) clearInterval(syncPollInterval);
+  syncPollInterval = setInterval(async () => {
+    if (isEditing) return;
+    try {
+      const r = await fetch('/pauta/mtime');
+      const d = await r.json();
+      if (d.mtime !== lastKnownMtime) {
+        setSyncStatus('remote');
+        await cargarPautaDesdeServidor();
+        setSyncStatus('ok');
+        showToast('📡 Pauta actualizada por otro usuario');
+      }
+    } catch(e) { /* silencioso si falla la red */ }
+  }, 3000);
+}
+
+function scheduleAutoSave() {
+  markEditing();
+  setSyncStatus('syncing');
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(async () => {
+    await guardarPauta(true);
+    setSyncStatus('ok');
+  }, 800);
+}
+
 function showTab(id) {
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','editor','generar','clips','titulares'][i]===id));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -327,7 +391,19 @@ async function subirFotos(files) {
 async function cargarFotos() {
   const r = await fetch('/fotos');
   fotosDisponibles = await r.json();
+  await cargarPautaDesdeServidor();
+}
+
+async function cargarPautaDesdeServidor() {
+  const r = await fetch('/pauta');
+  const d = await r.json();
+  pautaData = d.data && d.data.length ? d.data : [{numero:'01',nombre:'',texto:'',foto:''}];
+  lastKnownMtime = d.mtime || 0;
   renderPauta();
+}
+
+function esc(str) {
+  return String(str||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function renderPauta() {
@@ -335,11 +411,14 @@ function renderPauta() {
   if(!pautaData.length) pautaData = [{numero:'01',nombre:'',texto:'',foto:''}];
   tbody.innerHTML = pautaData.map((row,i)=>`
     <tr>
-      <td><input value="${row.numero}" style="width:50px;text-align:center" onchange="pautaData[${i}].numero=this.value"></td>
-      <td><input value="${row.nombre}" placeholder="Nombre completo" onchange="pautaData[${i}].nombre=this.value.toUpperCase()"></td>
-      <td><input value="${row.texto || ''}"placeholder="Texto opcional" onchange="pautaData[${i}].texto=this.value"></td>
+      <td><input value="${esc(row.numero)}" style="width:50px;text-align:center"
+          oninput="pautaData[${i}].numero=this.value;scheduleAutoSave()"></td>
+      <td><input value="${esc(row.nombre)}" placeholder="Nombre completo"
+          oninput="pautaData[${i}].nombre=this.value.toUpperCase();this.value=pautaData[${i}].nombre;scheduleAutoSave()"></td>
+      <td><input value="${esc(row.texto||'')}" placeholder="Texto opcional"
+          oninput="pautaData[${i}].texto=this.value;scheduleAutoSave()"></td>
       <td>
-        <select onchange="pautaData[${i}].foto=this.value;updateThumb(${i},this.value)">
+        <select onchange="pautaData[${i}].foto=this.value;updateThumb(${i},this.value);scheduleAutoSave()">
           <option value="">— selecciona foto —</option>
           ${fotosDisponibles.map(f=>`<option value="${f}" ${f===row.foto?'selected':''}>${f}</option>`).join('')}
         </select>
@@ -374,28 +453,42 @@ function addRow() {
     foto: ''
   });
   renderPauta();
+  scheduleAutoSave();
 }
-
 
 function removeRow(i) {
   pautaData.splice(i,1);
+  if(!pautaData.length) pautaData = [{numero:'01',nombre:'',texto:'',foto:''}];
   renderPauta();
+  scheduleAutoSave();
 }
 
 function descargarPautaDocx() {
   window.location = '/pauta/docx';
 }
 
-async function guardarPauta() {
+async function guardarPauta(silent=false) {
   const r = await fetch('/pauta', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(pautaData)});
   const d = await r.json();
-  if(d.ok) showToast('Pauta guardada ✓');
-  else showToast('Error: '+d.error, true);
+  if(d.ok) {
+    lastKnownMtime = d.mtime || lastKnownMtime;
+    if(!silent) showToast('Pauta guardada ✓');
+  } else {
+    if(!silent) showToast('Error: '+(d.error||d.msg||''), true);
+  }
+}
+
+async function guardarPautaManual() {
+  clearTimeout(autoSaveTimer);
+  setSyncStatus('syncing');
+  await guardarPauta(false);
+  setSyncStatus('ok');
 }
 
 // ── GENERAR ──
 async function generarClips() {
-  await guardarPauta();
+  clearTimeout(autoSaveTimer);
+  await guardarPauta(true);
   const btn = document.getElementById('btn-generar');
   btn.disabled = true;
   document.getElementById('log-box').innerHTML = '<span class="info">Iniciando...</span>';
@@ -469,6 +562,8 @@ fetch('/info').then(r=>r.json()).then(d=>{
 });
 
 cargarFotos();
+startSyncPolling();
+setSyncStatus('ok');
 
 // ── EDITOR ────────────────────────────────────────────────────────────────────
 
