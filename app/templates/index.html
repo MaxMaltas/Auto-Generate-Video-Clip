@@ -400,12 +400,20 @@ async function cargarPautaDesdeServidor() {
   const r = await fetch('/pauta');
   const d = await r.json();
   pautaData = d.data && d.data.length ? d.data : [{numero:'01',nombre:'',texto:'',foto:''}];
+  pautaData.forEach(row => { if (!row.foto) row.foto = autoAsignarFoto(row.numero); });
   lastKnownMtime = d.mtime || 0;
   renderPauta();
 }
 
 function esc(str) {
   return String(str||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function autoAsignarFoto(numero) {
+  return fotosDisponibles.find(f => {
+    const sinExt = f.replace(/\.[^.]+$/, '');
+    return sinExt === numero || sinExt.startsWith(numero + '_');
+  }) || '';
 }
 
 function renderPauta() {
@@ -452,7 +460,7 @@ function addRow() {
     numero: nextNum,
     nombre: '',
     texto: '',
-    foto: ''
+    foto: autoAsignarFoto(nextNum)
   });
   renderPauta();
   scheduleAutoSave();
