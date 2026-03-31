@@ -88,3 +88,21 @@ def procesar_todas_route():
     resultados = procesar_lote(items)
     ok = sum(1 for r in resultados if r.get("ok"))
     return jsonify({"ok": True, "resultados": resultados, "total": ok})
+
+@media_bp.route("/fotos/borrar_todas", methods=["DELETE"])
+def borrar_todas_fotos():
+    deleted = 0
+    for f in INPUT.iterdir():
+        if f.is_file():
+            f.unlink()
+            deleted += 1
+    return jsonify({"ok": True, "deleted": deleted})
+
+@media_bp.route("/clips/borrar_todos", methods=["DELETE"])
+def borrar_todos_clips():
+    deleted = 0
+    for f in OUTPUT.iterdir():
+        if f.is_file() and f.suffix.lower() == ".mp4":
+            f.unlink()
+            deleted += 1
+    return jsonify({"ok": True, "deleted": deleted})

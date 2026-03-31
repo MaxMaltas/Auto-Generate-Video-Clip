@@ -108,6 +108,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-ghost" onclick="addRow()">+ Añadir entrada</button>
       <button class="btn btn-ghost" onclick="cargarFotos()">↻ Actualizar fotos</button>
       <button class="btn btn-ghost" onclick="descargarPautaDocx()">⬇ Descargar pauta Word</button>
+      <button class="btn btn-danger" onclick="borrarTodasFotos()">🗑 Borrar todas las fotos</button>
       <button class="btn btn-success" onclick="guardarPautaManual()" style="margin-left:auto">Guardar pauta</button>
     </div>
     <table id="pauta-table">
@@ -294,6 +295,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div style="display:flex;gap:.75rem;margin-bottom:1rem">
       <button class="btn btn-ghost" onclick="cargarClips()">↻ Actualizar</button>
       <button class="btn btn-ghost" onclick="descargarTodos()">⬇ Descargar todos (ZIP)</button>
+      <button class="btn btn-danger" onclick="borrarTodosClips()">🗑 Borrar todos los clips</button>
     </div>
     <div class="preview-grid" id="clips-grid">
       <div style="color:var(--muted);font-size:14px;padding:1rem">Aún no hay clips. Genera primero desde la pestaña ⚙️.</div>
@@ -546,6 +548,30 @@ async function cargarClips() {
 
 async function descargarTodos() {
   window.location = '/zip';
+}
+
+async function borrarTodasFotos() {
+  if (!confirm('¿Borrar todas las fotos de input? Esta acción no se puede deshacer.')) return;
+  const r = await fetch('/fotos/borrar_todas', {method:'DELETE'});
+  const d = await r.json();
+  if (d.ok) {
+    showToast(`${d.deleted} foto(s) eliminada(s)`);
+    cargarFotos();
+  } else {
+    showToast('Error al borrar las fotos', true);
+  }
+}
+
+async function borrarTodosClips() {
+  if (!confirm('¿Borrar todos los clips exportados? Esta acción no se puede deshacer.')) return;
+  const r = await fetch('/clips/borrar_todos', {method:'DELETE'});
+  const d = await r.json();
+  if (d.ok) {
+    showToast(`${d.deleted} clip(s) eliminado(s)`);
+    cargarClips();
+  } else {
+    showToast('Error al borrar los clips', true);
+  }
 }
 
 function showToast(msg, err=false) {
