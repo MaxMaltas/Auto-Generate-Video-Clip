@@ -113,7 +113,7 @@ venv\Scripts\activate
 ## 5. Instalar dependencias
 
 ```bash
-pip install flask ffmpeg-python python-docx
+pip install flask ffmpeg-python python-docx pillow
 ```
 
 ---
