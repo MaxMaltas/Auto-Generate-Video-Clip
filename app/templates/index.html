@@ -142,6 +142,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
           Selecciona una foto para editar
         </div>
         <img id="editor-img" style="position:absolute;display:none;cursor:move;user-select:none" draggable="false">
+        <!-- Guías horizontales a 96px (8.889% y 91.111% del canvas 1080px) -->
+        <div style="position:absolute;left:0;right:0;top:8.889%;height:1px;background:rgba(255,217,61,.7);pointer-events:none;z-index:10">
+          <span style="position:absolute;right:6px;top:-14px;font-size:10px;color:#ffd93d;font-family:monospace">96px</span>
+        </div>
+        <div style="position:absolute;left:0;right:0;top:91.111%;height:1px;background:rgba(255,217,61,.7);pointer-events:none;z-index:10">
+          <span style="position:absolute;right:6px;top:3px;font-size:10px;color:#ffd93d;font-family:monospace">96px</span>
+        </div>
       </div>
     </div>
 
