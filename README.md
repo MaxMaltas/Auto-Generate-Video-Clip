@@ -113,7 +113,7 @@ venv\Scripts\activate
 ## 5. Instalar dependencias
 
 ```bash
-pip install flask ffmpeg-python python-docx pillow
+pip install flask ffmpeg-python python-docx pillow requests beautifulsoup4
 ```
 
 ---
@@ -179,7 +179,7 @@ source venv/bin/activate
 ## 6. Dependencias
 
 ```bash
-pip install flask ffmpeg-python python-docx
+pip install flask ffmpeg-python python-docx pillow requests beautifulsoup4
 ```
 
 ---
