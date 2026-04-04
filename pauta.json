@@ -1,26 +1,38 @@
 [
   {
+    "foto": "01_editada.png",
+    "nombre": "A",
     "numero": "01",
-    "nombre": "ASD",
-    "texto": "asd",
-    "foto": "Sin título-1 - 27-03-2026 19-23-47(1).png"
+    "texto": ""
   },
   {
     "numero": "02",
-    "nombre": "ASD",
-    "texto": "asdasdasd",
-    "foto": "WhatsApp Image 2026-03-27 at 05.35.49 (1)_editada.png"
+    "nombre": "B",
+    "texto": "",
+    "foto": "02_editada.png"
   },
   {
     "numero": "03",
-    "nombre": "QWREWERWE",
-    "texto": "rwerwerwre",
-    "foto": "WhatsApp Image 2026-03-27 at 05.35.49_editada.png"
+    "nombre": "C",
+    "texto": "",
+    "foto": "03_editada.png"
   },
   {
     "numero": "04",
-    "nombre": "CDS",
-    "texto": "scsdsdsdc",
-    "foto": "WhatsApp Image 2026-03-27 at 05.35.50 (1)_editada.png"
+    "nombre": "D",
+    "texto": "",
+    "foto": "04_editada.png"
+  },
+  {
+    "numero": "05",
+    "nombre": "E",
+    "texto": "",
+    "foto": "05_editada.png"
+  },
+  {
+    "numero": "06",
+    "nombre": "F",
+    "texto": "",
+    "foto": "06_editada.png"
   }
 ]
