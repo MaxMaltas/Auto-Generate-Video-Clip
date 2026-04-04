@@ -254,12 +254,23 @@ tr:hover td{background:rgba(255,255,255,.02)}
                  padding:10px 12px;border-radius:8px;font-size:15px;font-family:inherit;
                  width:100%;resize:vertical;line-height:1.5"></textarea>
 
-        <div style="display:flex;gap:1rem;align-items:flex-end;margin-top:1rem">
+        <div style="display:flex;gap:1rem;align-items:flex-end;margin-top:1rem;flex-wrap:wrap">
           <div>
             <h3>Número</h3>
             <input type="text" id="t-numero" value="01" style="width:80px;text-align:center">
           </div>
-          <button class="btn btn-success" id="btn-t-generar" onclick="titularesGenerar()">▶ Generar clip</button>
+          <div>
+            <h3>Sección</h3>
+            <select id="t-seccion" style="width:150px">
+              <option value="SUCESOS">SUCESOS</option>
+              <option value="BOLETINES">BOLETINES</option>
+              <option value="PROTAS">PROTAS</option>
+              <option value="INFO">INFO</option>
+              <option value="DEPORTES">DEPORTES</option>
+            </select>
+          </div>
+          <button class="btn btn-success" id="btn-t-generar" onclick="titularesGenerarPremiere()">▶ Generar Premiere (50s)</button>
+          <button class="btn btn-ghost" id="btn-t-generar-rapido" onclick="titularesGenerar()" title="Generación rápida sin capas Premiere">▶ Rápido</button>
         </div>
       </div>
 
@@ -809,7 +820,7 @@ async function titularesGenerar() {
   if (!titular) { showToast('El titular está vacío', true); return; }
   if (!imagen)  { showToast('No hay imagen disponible', true); return; }
 
-  const btn = document.getElementById('btn-t-generar');
+  const btn = document.getElementById('btn-t-generar-rapido');
   btn.disabled = true;
 
   const statusCard = document.getElementById('t-status-card');
@@ -830,16 +841,50 @@ async function titularesGenerar() {
     return;
   }
 
-  _titularesPoll(btn);
+  _titularesPoll(btn, '/titulares/estado');
 }
 
-function _titularesPoll(btn) {
+async function titularesGenerarPremiere() {
+  const titular = document.getElementById('t-titular').value.trim();
+  const imagen  = document.getElementById('t-foto').dataset.filename || '';
+  const numero  = document.getElementById('t-numero').value.trim() || '01';
+  const seccion = document.getElementById('t-seccion').value;
+
+  if (!titular) { showToast('El titular está vacío', true); return; }
+  if (!imagen)  { showToast('No hay imagen disponible', true); return; }
+
+  const btn = document.getElementById('btn-t-generar');
+  btn.disabled = true;
+
+  const statusCard = document.getElementById('t-status-card');
+  statusCard.style.display = 'block';
+  document.getElementById('t-log').innerHTML = '<span class="info">Iniciando generación Premiere...</span>';
+  document.getElementById('t-fill').style.width = '5%';
+
+  const r = await fetch('/titulares/generar-premiere', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ titular, imagen, numero, seccion }),
+  });
+  const d = await r.json();
+
+  if (!d.ok) {
+    showToast('Error: ' + d.error, true);
+    btn.disabled = false;
+    return;
+  }
+
+  _titularesPoll(btn, '/titulares/estado-premiere');
+}
+
+function _titularesPoll(btn, estadoUrl) {
+  const url = estadoUrl || '/titulares/estado';
   const interval = setInterval(async () => {
-    const r = await fetch('/titulares/estado');
+    const r = await fetch(url);
     const d = await r.json();
 
     document.getElementById('t-fill').style.width =
-      d.total > 0 ? Math.round((d.done / d.total) * 100) + '%' : '0%';
+      d.total > 0 ? Math.round((d.done / d.total) * 100) + '%' : (d.running ? '50%' : '0%');
 
     const log = document.getElementById('t-log');
     log.innerHTML = d.log.map(l =>

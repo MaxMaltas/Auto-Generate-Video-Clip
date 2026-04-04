@@ -8,6 +8,7 @@ from app.services.titular_service import (
     get_estado,
     TITULAR_TEMP,
 )
+import app.services.titular_premiere_service as pm_svc
 
 titular_bp = Blueprint("titular", __name__)
 
@@ -62,3 +63,33 @@ def thumb(nombre):
     if not path.exists():
         abort(404)
     return send_file(str(path.resolve()))
+
+
+# ── Premiere-style generation ─────────────────────────────────────────────────
+
+@titular_bp.route("/titulares/secciones")
+def secciones():
+    return jsonify(pm_svc.get_secciones())
+
+
+@titular_bp.route("/titulares/generar-premiere", methods=["POST"])
+def generar_premiere():
+    data     = request.get_json(force=True)
+    titular  = (data.get("titular")  or "").strip()
+    imagen   = (data.get("imagen")   or "").strip()
+    numero   = (data.get("numero")   or "01").strip()
+    seccion  = (data.get("seccion")  or "SUCESOS").strip().upper()
+    logo     = (data.get("logo")     or "").strip() or None
+
+    if not titular or not imagen:
+        return jsonify({"ok": False, "error": "Titular e imagen requeridos"})
+
+    started = pm_svc.iniciar_generacion(titular, imagen, numero, seccion, logo)
+    if not started:
+        return jsonify({"ok": False, "error": "Ya hay una generación en curso"})
+    return jsonify({"ok": True})
+
+
+@titular_bp.route("/titulares/estado-premiere")
+def estado_premiere():
+    return jsonify(pm_svc.get_estado())
