@@ -105,7 +105,7 @@ cd productoraclips
 
 ```bash
 python -m venv venv
-venv\Scripts\activate
+venv\Scripts\activate.bat
 ```
 
 ---
