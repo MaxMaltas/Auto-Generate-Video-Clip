@@ -50,8 +50,8 @@ SECTION_CONFIGS: dict[str, dict] = {
     "SUCESOS": {
         "zoom_start":    1.61, "zoom_end":    2.11,
         "center_x":      0.019, "center_y":  0.0,
-        "color_opacity": 0.88,
-        "text_y_ratio":  0.2272,
+        "color_opacity": 0.50,
+        "text_y_ratio":  0.62,
     },
     "PROTAS": {
         "zoom_start":    1.61, "zoom_end":    1.92,
@@ -143,21 +143,21 @@ def _get_section_assets(seccion: str, logo_file: str | None) -> dict:
 
     # Section animation -------------------------------------------------------
     section_mov = _find_asset([
-        ASSETS / "sections" / f"{sec}.mp4",
         ASSETS / "sections" / f"{sec}.mov",
-        ASSETS / f"{sec}.mp4",
+        ASSETS / "sections" / f"{sec}.mp4",
         ASSETS / f"{sec}.mov",
+        ASSETS / f"{sec}.mp4",
     ])
 
     # Colour overlay -----------------------------------------------------------
     color_ov = _find_asset([
-        ASSETS / "colors" / f"COLOR {sec}.mp4",
-        ASSETS / "colors" / f"COLOR {sec}.mov",
-        ASSETS / "colors" / f"COLOR {sec} NEW.mp4",
+        #ASSETS / "colors" / f"COLOR {sec}.mp4",
+        #ASSETS / "colors" / f"COLOR {sec}.mov",
+        #ASSETS / "colors" / f"COLOR {sec} NEW.mp4",
         ASSETS / "colors" / f"COLOR {sec} NEW.png",
-        ASSETS / f"COLOR {sec}.mp4",
-        ASSETS / f"COLOR {sec}.mov",
-        ASSETS / f"COLOR {sec} NEW.mp4",
+        #ASSETS / f"COLOR {sec}.mp4",
+        #ASSETS / f"COLOR {sec}.mov",
+        #ASSETS / f"COLOR {sec} NEW.mp4",
         ASSETS / f"COLOR {sec} NEW.png",
     ])
 
@@ -226,8 +226,8 @@ def _render_text_png(titular: str, config: dict) -> Path:
     the Premiere Pro Essential Graphics text layer coordinates from the XML.
     Returns the output path.
     """
-    text_x = int(TEXT_X_RATIO * WIDTH)            # ≈277 px from left
-    text_y = int(config["text_y_ratio"] * HEIGHT)  # 245–304 px from top
+    text_x = int(TEXT_X_RATIO * WIDTH)                 # ≈277 px from left
+    last_line_y = int(config["text_y_ratio"] * HEIGHT)  # fixed Y for the last line
     max_text_w = WIDTH - text_x - int(WIDTH * 0.25)  # right margin 10%
 
     canvas = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
@@ -240,14 +240,15 @@ def _render_text_png(titular: str, config: dict) -> Path:
     font  = _get_font(font_size)
     lines = _wrap_lines(text_up, font, max_text_w, draw)
 
-    # Shrink font until text block fits within the frame vertically
+    # Shrink font until text block (anchored at last_line_y) fits vertically
     while font_size >= min_font:
         font      = _get_font(font_size)
         draw_tmp  = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
         lines     = _wrap_lines(text_up, font, max_text_w, draw_tmp)
         sample_bb = draw_tmp.textbbox((0, 0), "Ag", font=font)
         line_h    = (sample_bb[3] - sample_bb[1]) + 10
-        if text_y + len(lines) * line_h <= HEIGHT - int(HEIGHT * 0.08):
+        first_line_y = last_line_y - (len(lines) - 1) * line_h
+        if first_line_y >= int(HEIGHT * 0.08):
             break
         font_size -= 4
 
@@ -255,7 +256,7 @@ def _render_text_png(titular: str, config: dict) -> Path:
     line_h    = (sample_bb[3] - sample_bb[1]) + 10
 
     draw = ImageDraw.Draw(canvas, "RGBA")
-    y = text_y
+    y = last_line_y - (len(lines) - 1) * line_h
     for line in lines:
         # Drop shadow
         draw.text((text_x + 2, y + 2), line, font=font, fill=(0, 0, 0, 190))
@@ -281,13 +282,11 @@ def _build_ffmpeg_cmd(
     salida:    Path,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
-    N   = TITULAR_FRAMES
-
     cmd = ["ffmpeg", "-y"]
 
     # ── Inputs ───────────────────────────────────────────────────────────────
     # Input 0: photo (still image, looped for full duration)
-    # Note: no -framerate flag; zoompan's fps= controls output rate
+    # Output frame rate is fixed in filter_complex (fps={FPS})
     cmd += ["-loop", "1", "-t", dur, "-i", str(foto_path)]
     idx = 1
 
@@ -327,40 +326,17 @@ def _build_ffmpeg_cmd(
         layer_idx["logo"] = _add_still(assets["logo"])
 
     # ── Filter complex ────────────────────────────────────────────────────────
-    cx = config.get("center_x", 0.0)
-    cy = config.get("center_y", 0.0)
-    zs = config["zoom_start"]
-    ze = config["zoom_end"]
-
-    # Zoompan expressions
-    # z: linear from zs → ze over N frames; on starts at 1
-    z_expr = f"{zs}+(({ze}-{zs})*(on-1)/({N}-1))"
-    # Crop centred at (0.5+cx, 0.5+cy) of the pre-scaled image, clamped
-    x_expr = f"max(0,min(iw*(0.5+{cx})-iw/zoom/2,iw*(1-1/zoom)))"
-    y_expr = f"max(0,min(ih*(0.5+{cy})-ih/zoom/2,ih*(1-1/zoom)))"
-
     flt: list[str] = []
 
     # Step 1 – Scale photo to 1920×1080 (cover + centre crop)
     flt.append(
         f"[0:v]scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=increase,"
-        f"crop={WIDTH}:{HEIGHT},"
-        f"setpts=PTS-STARTPTS[photo_s]"
-    )
-
-    # Step 2 – Ken Burns zoompan
-    flt.append(
-        f"[photo_s]zoompan="
-        f"z='{z_expr}':"
-        f"x='{x_expr}':"
-        f"y='{y_expr}':"
-        f"d={N}:"
-        f"s={WIDTH}x{HEIGHT}:"
+        f"crop={WIDTH}:{HEIGHT}:(in_w-out_w)/2:(in_h-out_h)/2,"
         f"fps={FPS},"
-        f"setpts=PTS-STARTPTS[photo_kb]"
+        f"setsar=1,"
+        f"setpts=PTS-STARTPTS[photo_static]"
     )
-
-    current = "photo_kb"
+    current = "photo_static"
 
     # Step 3 – Degradado overlay (normal blend)
     if "degradado" in layer_idx:
@@ -385,7 +361,7 @@ def _build_ffmpeg_cmd(
             # PNG sólido: multiply con un PNG opaco eliminaría casi todos los canales.
             # En su lugar usamos overlay con opacidad baja (≈20%) para un tinte suave.
             # Cuando tengas los .mov originales de Premiere, el multiply funcionará bien.
-            png_opacity = min(opacity * 0.22, 0.25)  # ~20% máximo
+            png_opacity = min(opacity, 1)  # ~20% máximo
             flt.append(
                 f"[{i}:v]scale={WIDTH}:{HEIGHT},"
                 f"format=rgba,"
@@ -418,10 +394,13 @@ def _build_ffmpeg_cmd(
     # Step 7 – Logo overlay (top, normal blend)
     if "logo" in layer_idx:
         i = layer_idx["logo"]
+        logo_x = int(TEXT_X_RATIO * WIDTH)
         flt.append(
             f"[{i}:v]setpts=PTS-STARTPTS[logo_l]"
         )
-        flt.append(f"[{current}][logo_l]overlay=format=auto[with_logo]")
+        flt.append(
+            f"[{current}][logo_l]overlay=x={logo_x}:y=0:format=auto[with_logo]"
+        )
         current = "with_logo"
 
     filter_complex = "; ".join(flt)
