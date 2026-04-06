@@ -74,17 +74,18 @@ def secciones():
 
 @titular_bp.route("/titulares/generar-premiere", methods=["POST"])
 def generar_premiere():
-    data     = request.get_json(force=True)
-    titular  = (data.get("titular")  or "").strip()
-    imagen   = (data.get("imagen")   or "").strip()
-    numero   = (data.get("numero")   or "01").strip()
-    seccion  = (data.get("seccion")  or "SUCESOS").strip().upper()
-    logo     = (data.get("logo")     or "").strip() or None
+    data       = request.get_json(force=True)
+    titular    = (data.get("titular")    or "").strip()
+    imagen     = (data.get("imagen")     or "").strip()
+    numero     = (data.get("numero")     or "01").strip()
+    seccion    = (data.get("seccion")    or "SUCESOS").strip().upper()
+    logo       = (data.get("logo")       or "").strip() or None
+    source_url = (data.get("source_url") or "").strip() or None
 
     if not titular or not imagen:
         return jsonify({"ok": False, "error": "Titular e imagen requeridos"})
 
-    started = pm_svc.iniciar_generacion(titular, imagen, numero, seccion, logo)
+    started = pm_svc.iniciar_generacion(titular, imagen, numero, seccion, logo, source_url)
     if not started:
         return jsonify({"ok": False, "error": "Ya hay una generación en curso"})
     return jsonify({"ok": True})

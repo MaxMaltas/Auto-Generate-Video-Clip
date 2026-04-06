@@ -18,7 +18,9 @@ Output   : 1920 × 1080, H.264, yuv420p, 8 Mbps
 import re
 import subprocess
 import threading
+import unicodedata
 from pathlib import Path
+from urllib.parse import urlparse
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -28,6 +30,9 @@ from app.core.config import INPUT, OUTPUT, TEMP, WIDTH, HEIGHT, FPS
 ASSETS = Path(__file__).resolve().parent.parent.parent / "assets"
 TITULAR_TEMP = TEMP / "titulares"
 TITULAR_TEMP.mkdir(parents=True, exist_ok=True)
+
+DEFAULT_LOGO = "EL PAIS_NEG.png"
+MEDIOS_DIR   = ASSETS / "MEDIOS"
 
 # ── Timing ───────────────────────────────────────────────────────────────────
 TITULAR_DURATION = 50          # seconds
@@ -104,6 +109,7 @@ def iniciar_generacion(
     numero: str,
     seccion: str = "SUCESOS",
     logo_file: str | None = None,
+    source_url: str | None = None,
 ) -> bool:
     with _lock:
         if _estado["running"]:
@@ -111,7 +117,7 @@ def iniciar_generacion(
         _estado["running"] = True
     threading.Thread(
         target=_run_generar,
-        args=(titular, imagen_filename, numero, seccion, logo_file),
+        args=(titular, imagen_filename, numero, seccion, logo_file, source_url),
         daemon=True,
     ).start()
     return True
@@ -135,6 +141,68 @@ def _find_asset(candidates: list) -> Path | None:
         if path.exists():
             return path
     return None
+
+
+def _norm(s: str) -> str:
+    """Uppercase, strip accents, keep only alphanumeric chars."""
+    s = unicodedata.normalize("NFD", s.upper())
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^A-Z0-9]", "", s)
+
+
+def _detect_logo_from_url(url: str) -> str:
+    """
+    Extract the media outlet from *url* and return the matching filename
+    from assets/MEDIOS/.  Falls back to DEFAULT_LOGO if nothing matches.
+
+    Strategy:
+      1. Parse the hostname, strip 'www.' and country subdomains.
+      2. Normalise both the hostname key and each logo stem (_NEG suffix
+         removed, spaces/accents stripped).
+      3. Return the logo whose normalised name equals — or is fully
+         contained in — the normalised hostname.
+    """
+    try:
+        hostname = urlparse(url).netloc.lower()
+        hostname = re.sub(r"^www\.", "", hostname)
+        # Use only the registered domain part (drop TLD)
+        domain_key = _norm(hostname.split(".")[0])
+    except Exception:
+        return DEFAULT_LOGO
+
+    if not domain_key:
+        return DEFAULT_LOGO
+
+    candidates: list[Path] = sorted(
+        [p for p in MEDIOS_DIR.glob("*") if p.suffix.lower() in (".png", ".jpg")],
+        key=lambda p: p.name,
+    )
+
+    exact: Path | None = None
+    partial: Path | None = None
+    partial_score = 0.0
+
+    for logo_path in candidates:
+        stem      = logo_path.stem                           # e.g. "EL PAIS_NEG"
+        clean     = re.sub(r"_NEG$", "", stem, flags=re.IGNORECASE)
+        logo_norm = _norm(clean)                             # e.g. "ELPAIS"
+
+        if logo_norm == domain_key:
+            exact = logo_path
+            break
+
+        # Partial: logo name fully contained in domain key, or domain key
+        # fully contained in logo name (guards against single-letter matches)
+        if len(logo_norm) >= 3 and (
+            logo_norm in domain_key or domain_key in logo_norm
+        ):
+            score = len(logo_norm) / max(len(domain_key), 1)
+            if score > partial_score:
+                partial_score = score
+                partial = logo_path
+
+    matched = exact or (partial if partial_score >= 0.5 else None)
+    return matched.name if matched else DEFAULT_LOGO
 
 
 def _get_section_assets(seccion: str, logo_file: str | None) -> dict:
@@ -382,13 +450,11 @@ def _build_ffmpeg_cmd(
             )
         current = "with_col"
 
-    # Step 6 – Text overlay with 5-frame alpha fade-in
-    fade_dur = 5 / FPS   # 0.2 s
+    # Step 6 – Text overlay (no fade)
     flt.append(
         f"[{text_idx}:v]"
         f"scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=decrease,"
         f"pad={WIDTH}:{HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=black@0,"
-        f"fade=t=in:st=0:d={fade_dur:.4f}:alpha=1,"
         f"setpts=PTS-STARTPTS[txt_f]"
     )
     flt.append(f"[{current}][txt_f]overlay=format=auto[with_txt]")
@@ -436,6 +502,7 @@ def _run_generar(
     numero: str,
     seccion: str,
     logo_file: str | None,
+    source_url: str | None,
 ) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
     try:
@@ -448,6 +515,13 @@ def _run_generar(
             foto_path = TITULAR_TEMP / _safe_name(imagen_filename)
         if not foto_path.exists():
             raise FileNotFoundError(f"Foto no encontrada: {imagen_filename}")
+
+        # Auto-detect logo from URL when no explicit logo was provided
+        if not logo_file and source_url:
+            logo_file = _detect_logo_from_url(source_url)
+            _estado["log"].append(f"→ Logo detectado: {logo_file}")
+        elif not logo_file:
+            logo_file = DEFAULT_LOGO
 
         assets = _get_section_assets(sec, logo_file)
 

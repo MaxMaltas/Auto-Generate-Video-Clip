@@ -845,10 +845,11 @@ async function titularesGenerar() {
 }
 
 async function titularesGenerarPremiere() {
-  const titular = document.getElementById('t-titular').value.trim();
-  const imagen  = document.getElementById('t-foto').dataset.filename || '';
-  const numero  = document.getElementById('t-numero').value.trim() || '01';
-  const seccion = document.getElementById('t-seccion').value;
+  const titular    = document.getElementById('t-titular').value.trim();
+  const imagen     = document.getElementById('t-foto').dataset.filename || '';
+  const numero     = document.getElementById('t-numero').value.trim() || '01';
+  const seccion    = document.getElementById('t-seccion').value;
+  const source_url = document.getElementById('t-url').value.trim();
 
   if (!titular) { showToast('El titular está vacío', true); return; }
   if (!imagen)  { showToast('No hay imagen disponible', true); return; }
@@ -864,7 +865,7 @@ async function titularesGenerarPremiere() {
   const r = await fetch('/titulares/generar-premiere', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ titular, imagen, numero, seccion }),
+    body: JSON.stringify({ titular, imagen, numero, seccion, source_url }),
   });
   const d = await r.json();
 
