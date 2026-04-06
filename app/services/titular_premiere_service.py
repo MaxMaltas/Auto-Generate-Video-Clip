@@ -167,6 +167,7 @@ def _get_section_assets(seccion: str, logo_file: str | None) -> dict:
     # Logo ---------------------------------------------------------------------
     if logo_file:
         logo = _find_asset([
+            ASSETS / "MEDIOS" / logo_file,
             ASSETS / "logos" / logo_file,
             ASSETS / logo_file,
         ])
@@ -220,11 +221,11 @@ def _wrap_lines(text: str, font, max_width: int, draw: ImageDraw.Draw) -> list[s
     return lines or [text]
 
 
-def _render_text_png(titular: str, config: dict) -> Path:
+def _render_text_png(titular: str, config: dict) -> tuple[Path, int]:
     """
     Render the headline as a transparent 1920×1080 PNG positioned to match
     the Premiere Pro Essential Graphics text layer coordinates from the XML.
-    Returns the output path.
+    Returns (output_path, first_line_y).
     """
     text_x = int(TEXT_X_RATIO * WIDTH)                 # ≈277 px from left
     last_line_y = int(config["text_y_ratio"] * HEIGHT)  # fixed Y for the last line
@@ -256,7 +257,8 @@ def _render_text_png(titular: str, config: dict) -> Path:
     line_h    = (sample_bb[3] - sample_bb[1]) + 10
 
     draw = ImageDraw.Draw(canvas, "RGBA")
-    y = last_line_y - (len(lines) - 1) * line_h
+    first_line_y = last_line_y - (len(lines) - 1) * line_h
+    y = first_line_y
     for line in lines:
         # Drop shadow
         draw.text((text_x + 2, y + 2), line, font=font, fill=(0, 0, 0, 190))
@@ -267,7 +269,7 @@ def _render_text_png(titular: str, config: dict) -> Path:
     safe = re.sub(r"[^\w]", "_", titular[:30])
     out  = TITULAR_TEMP / f"pm_text_{safe}.png"
     canvas.save(str(out), "PNG")
-    return out
+    return out, first_line_y
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -275,11 +277,12 @@ def _render_text_png(titular: str, config: dict) -> Path:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_ffmpeg_cmd(
-    foto_path: Path,
-    text_png:  Path,
-    config:    dict,
-    assets:    dict,
-    salida:    Path,
+    foto_path:    Path,
+    text_png:     Path,
+    config:       dict,
+    assets:       dict,
+    salida:       Path,
+    first_line_y: int = 0,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
     cmd = ["ffmpeg", "-y"]
@@ -392,14 +395,16 @@ def _build_ffmpeg_cmd(
     current = "with_txt"
 
     # Step 7 – Logo overlay (top, normal blend)
+    # X aligned with text; Y = 30 px above the first line of text
     if "logo" in layer_idx:
         i = layer_idx["logo"]
         logo_x = int(TEXT_X_RATIO * WIDTH)
+        logo_y = first_line_y - 30   # ih is subtracted so top-edge lands 30 px above text
         flt.append(
             f"[{i}:v]setpts=PTS-STARTPTS[logo_l]"
         )
         flt.append(
-            f"[{current}][logo_l]overlay=x={logo_x}:y=0:format=auto[with_logo]"
+            f"[{current}][logo_l]overlay=x={logo_x}:y={logo_y}-overlay_h:format=auto[with_logo]"
         )
         current = "with_logo"
 
@@ -455,7 +460,7 @@ def _run_generar(
             _estado["log"].append(f"ℹ Assets no encontrados (se omiten): {', '.join(missing)}")
 
         _estado["log"].append("→ Renderizando texto...")
-        text_png = _render_text_png(titular, config)
+        text_png, first_line_y = _render_text_png(titular, config)
 
         num    = re.sub(r"[^\d]", "", str(numero)).zfill(2) or "01"
         nombre = _safe_name(titular[:50].upper()) or "TITULAR"
@@ -463,7 +468,7 @@ def _run_generar(
 
         _estado["log"].append(f"→ [{num}] Construyendo pipeline FFmpeg...")
 
-        cmd = _build_ffmpeg_cmd(foto_path, text_png, config, assets, salida)
+        cmd = _build_ffmpeg_cmd(foto_path, text_png, config, assets, salida, first_line_y)
 
         _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
 
