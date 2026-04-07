@@ -840,6 +840,15 @@ function tRender() {
                 style="width:100%;border-radius:8px;object-fit:cover;max-height:130px;border:1px solid var(--border);display:block;margin-bottom:.5rem">`
             : `<div style="height:90px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;margin-bottom:.5rem">Sin imagen</div>`
           }
+          <label class="btn btn-ghost" style="width:100%;font-size:12px;text-align:center;margin-bottom:.35rem;display:block">
+            Subir imagen manual
+            <input type="file" accept="image/png,image/jpeg,image/jpg" style="display:none"
+              onchange="tUploadImage(${item.id}, this)">
+          </label>
+          ${item.imagen
+            ? `<div style="font-size:11px;color:var(--muted);word-break:break-word;margin-bottom:.5rem">${item.imagen}</div>`
+            : ''
+          }
           ${item.preview
             ? `<h3 style="margin-top:.5rem">Preview</h3>
                <img src="/titulares/pm-thumb/${encodeURIComponent(item.preview)}?t=${Date.now()}"
@@ -890,6 +899,33 @@ function tAddEmpty() {
     logo_file: null, font_size: null, letter_spacing: -2, color_brightness: 1.0, preview: null,
   });
   tRender();
+}
+
+async function tUploadImage(id, input) {
+  const item = tLista.find(i => i.id === id);
+  const file = input && input.files ? input.files[0] : null;
+  if (!item || !file) return;
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    const r = await fetch('/upload', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      showToast('Error subiendo imagen: ' + (d.msg || d.error || 'desconocido'), true);
+      return;
+    }
+
+    item.imagen = d.filename || file.name.replace(/^.*[\\/]/, '');
+    item.preview = null;
+    tRender();
+    showToast('Imagen añadida al titular');
+  } catch (e) {
+    showToast('Error de conexión al subir la imagen', true);
+  } finally {
+    if (input) input.value = '';
+  }
 }
 
 async function titularesExtraer() {

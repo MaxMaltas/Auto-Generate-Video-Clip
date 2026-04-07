@@ -10,6 +10,7 @@ from app.services.titular_service import (
 )
 import app.services.titular_premiere_service as pm_svc
 from app.services.titular_premiere_service import TITULAR_TEMP as PM_TITULAR_TEMP
+from app.core.config import INPUT
 
 titular_bp = Blueprint("titular", __name__)
 
@@ -63,6 +64,8 @@ def thumb(nombre):
     if re.search(r"[/\\]|\.\.", nombre):
         abort(400)
     path = TITULAR_TEMP / nombre
+    if not path.exists():
+        path = INPUT / nombre
     if not path.exists():
         abort(404)
     return send_file(str(path.resolve()))

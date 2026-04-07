@@ -13,10 +13,10 @@ media_bp = Blueprint("media", __name__)
 def upload():
     f = request.files.get("file")
     try:
-        save_uploaded_file(f)
+        filename = save_uploaded_file(f)
     except ValueError as e:
         return jsonify({"ok": False, "msg": str(e)}), 400
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "filename": filename})
 
 @media_bp.route("/fotos")
 def fotos():
