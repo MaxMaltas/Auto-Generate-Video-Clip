@@ -209,3 +209,7 @@ __marimo__/
 #Large files
 assets/*.mov
 assets/*.avi
+
+# temp files
+*.tmp
+temp/
