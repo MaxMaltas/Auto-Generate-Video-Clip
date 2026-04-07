@@ -9,6 +9,7 @@ from app.services.titular_service import (
     TITULAR_TEMP,
 )
 import app.services.titular_premiere_service as pm_svc
+from app.services.titular_premiere_service import TITULAR_TEMP as PM_TITULAR_TEMP
 
 titular_bp = Blueprint("titular", __name__)
 
@@ -26,11 +27,13 @@ def extraer():
         imagen_filename = None
         if result["imagen_url"]:
             imagen_filename = descargar_imagen(result["imagen_url"])
+        logo_file = pm_svc._detect_logo_from_url(url) if url else None
         return jsonify({
             "ok": True,
             "titular": result["titular"],
             "imagen_url": result["imagen_url"],
             "imagen": imagen_filename,
+            "logo_file": logo_file,
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)[:200]})
@@ -74,18 +77,25 @@ def secciones():
 
 @titular_bp.route("/titulares/generar-premiere", methods=["POST"])
 def generar_premiere():
-    data       = request.get_json(force=True)
-    titular    = (data.get("titular")    or "").strip()
-    imagen     = (data.get("imagen")     or "").strip()
-    numero     = (data.get("numero")     or "01").strip()
-    seccion    = (data.get("seccion")    or "SUCESOS").strip().upper()
-    logo       = (data.get("logo")       or "").strip() or None
-    source_url = (data.get("source_url") or "").strip() or None
+    data             = request.get_json(force=True)
+    titular          = (data.get("titular")    or "").strip()
+    imagen           = (data.get("imagen")     or "").strip()
+    numero           = (data.get("numero")     or "01").strip()
+    seccion          = (data.get("seccion")    or "SUCESOS").strip().upper()
+    logo             = (data.get("logo")       or "").strip() or None
+    source_url       = (data.get("source_url") or "").strip() or None
+    font_size_raw    = data.get("font_size")
+    letter_spacing   = int(data.get("letter_spacing", 0) or 0)
+    color_brightness = float(data.get("color_brightness", 1.0) or 1.0)
+    font_size        = int(font_size_raw) if font_size_raw else None
 
     if not titular or not imagen:
         return jsonify({"ok": False, "error": "Titular e imagen requeridos"})
 
-    started = pm_svc.iniciar_generacion(titular, imagen, numero, seccion, logo, source_url)
+    started = pm_svc.iniciar_generacion(
+        titular, imagen, numero, seccion, logo, source_url,
+        font_size, letter_spacing, color_brightness,
+    )
     if not started:
         return jsonify({"ok": False, "error": "Ya hay una generación en curso"})
     return jsonify({"ok": True})
@@ -94,3 +104,59 @@ def generar_premiere():
 @titular_bp.route("/titulares/estado-premiere")
 def estado_premiere():
     return jsonify(pm_svc.get_estado())
+
+
+# ── Multi-titular list ────────────────────────────────────────────────────────
+
+@titular_bp.route("/titulares/lista", methods=["GET"])
+def lista_get():
+    return jsonify(pm_svc.get_titulares_list())
+
+
+@titular_bp.route("/titulares/lista", methods=["POST"])
+def lista_set():
+    items = request.get_json(force=True)
+    if not isinstance(items, list):
+        return jsonify({"ok": False, "error": "Se esperaba un array"})
+    pm_svc.set_titulares_list(items)
+    return jsonify({"ok": True})
+
+
+@titular_bp.route("/titulares/preview", methods=["POST"])
+def preview_titular():
+    item = request.get_json(force=True)
+    result = pm_svc.generar_preview(item)
+    return jsonify(result)
+
+
+@titular_bp.route("/titulares/pm-thumb/<nombre>")
+def pm_thumb(nombre):
+    if re.search(r"[/\\]|\.\.", nombre):
+        abort(400)
+    path = PM_TITULAR_TEMP / nombre
+    if not path.exists():
+        abort(404)
+    return send_file(str(path.resolve()))
+
+
+# ── Logo management ───────────────────────────────────────────────────────────
+
+@titular_bp.route("/titulares/logos")
+def logos_list():
+    return jsonify(pm_svc.get_logos_list())
+
+
+@titular_bp.route("/titulares/logo-mapping", methods=["GET"])
+def logo_mapping_get():
+    return jsonify(pm_svc.get_logo_mappings())
+
+
+@titular_bp.route("/titulares/logo-mapping", methods=["POST"])
+def logo_mapping_set():
+    data       = request.get_json(force=True)
+    domain_key = (data.get("domain_key") or "").strip().lower()
+    logo_file  = (data.get("logo_file")  or "").strip()
+    if not domain_key or not logo_file:
+        return jsonify({"ok": False, "error": "domain_key y logo_file requeridos"})
+    pm_svc.save_logo_mapping(domain_key, logo_file)
+    return jsonify({"ok": True})

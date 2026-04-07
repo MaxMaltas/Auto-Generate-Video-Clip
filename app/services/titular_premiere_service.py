@@ -15,6 +15,7 @@ Duration : 50 s  (1 250 frames @ 25 fps)
 Output   : 1920 × 1080, H.264, yuv420p, 8 Mbps
 """
 
+import json
 import re
 import subprocess
 import threading
@@ -31,8 +32,60 @@ ASSETS = Path(__file__).resolve().parent.parent.parent / "assets"
 TITULAR_TEMP = TEMP / "titulares"
 TITULAR_TEMP.mkdir(parents=True, exist_ok=True)
 
-DEFAULT_LOGO = "EL PAIS_NEG.png"
-MEDIOS_DIR   = ASSETS / "MEDIOS"
+DEFAULT_LOGO      = "EL PAIS_NEG.png"
+MEDIOS_DIR        = ASSETS / "MEDIOS"
+LOGO_MAPPINGS_FILE = ASSETS / "logo_mappings.json"
+
+# ── Logo mappings helpers ─────────────────────────────────────────────────────
+_mappings_lock = threading.Lock()
+
+
+def _load_mappings() -> dict:
+    """Return {domain_key: logo_filename} from the JSON file."""
+    try:
+        if LOGO_MAPPINGS_FILE.exists():
+            return json.loads(LOGO_MAPPINGS_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
+def _save_mappings(data: dict) -> None:
+    LOGO_MAPPINGS_FILE.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+
+
+def get_logos_list() -> list[str]:
+    """Sorted list of all logo filenames in MEDIOS_DIR."""
+    return sorted(
+        p.name for p in MEDIOS_DIR.glob("*")
+        if p.suffix.lower() in (".png", ".jpg")
+    )
+
+
+def get_logo_mappings() -> dict:
+    with _mappings_lock:
+        return _load_mappings()
+
+
+def save_logo_mapping(domain_key: str, logo_filename: str) -> None:
+    """Persist a domain → logo association."""
+    with _mappings_lock:
+        data = _load_mappings()
+        data[domain_key.strip().lower()] = logo_filename
+        _save_mappings(data)
+
+
+def _domain_key_from_url(url: str) -> str:
+    """Extract the normalised domain key from a URL (same logic as detection)."""
+    try:
+        hostname = urlparse(url).netloc.lower()
+        hostname = re.sub(r"^www\.", "", hostname)
+        return hostname.split(".")[0]
+    except Exception:
+        return ""
 
 # ── Timing ───────────────────────────────────────────────────────────────────
 TITULAR_DURATION = 50          # seconds
@@ -44,6 +97,8 @@ TITULAR_FRAMES   = TITULAR_DURATION * FPS   # 1 250 frames
 # color_opacity        : opacity of the multiply-blend colour layer (0–1)
 # text_y_ratio         : normalised Y position of the headline text
 TEXT_X_RATIO = 0.14446   # same for all sections
+LOGO_WIDTH = 300
+LOGO_TEXT_GAP = 30
 
 SECTION_CONFIGS: dict[str, dict] = {
     "BOLETINES": {
@@ -110,6 +165,9 @@ def iniciar_generacion(
     seccion: str = "SUCESOS",
     logo_file: str | None = None,
     source_url: str | None = None,
+    font_size: int | None = None,
+    letter_spacing: int = 0,
+    color_brightness: float = 1.0,
 ) -> bool:
     with _lock:
         if _estado["running"]:
@@ -117,7 +175,8 @@ def iniciar_generacion(
         _estado["running"] = True
     threading.Thread(
         target=_run_generar,
-        args=(titular, imagen_filename, numero, seccion, logo_file, source_url),
+        args=(titular, imagen_filename, numero, seccion, logo_file, source_url,
+              font_size, letter_spacing, color_brightness),
         daemon=True,
     ).start()
     return True
@@ -143,6 +202,16 @@ def _find_asset(candidates: list) -> Path | None:
     return None
 
 
+def _get_logo_layout(first_line_y: int, logo_width: int = LOGO_WIDTH) -> dict[str, int]:
+    """Shared logo geometry so preview and final render stay aligned."""
+    return {
+        "x": int(TEXT_X_RATIO * WIDTH),
+        "width": logo_width,
+        # The real top edge is resolved with the scaled logo height in each renderer.
+        "baseline_y": first_line_y - LOGO_TEXT_GAP,
+    }
+
+
 def _norm(s: str) -> str:
     """Uppercase, strip accents, keep only alphanumeric chars."""
     s = unicodedata.normalize("NFD", s.upper())
@@ -156,6 +225,7 @@ def _detect_logo_from_url(url: str) -> str:
     from assets/MEDIOS/.  Falls back to DEFAULT_LOGO if nothing matches.
 
     Strategy:
+      0. Check manual logo_mappings.json first (exact raw domain key).
       1. Parse the hostname, strip 'www.' and country subdomains.
       2. Normalise both the hostname key and each logo stem (_NEG suffix
          removed, spaces/accents stripped).
@@ -165,13 +235,20 @@ def _detect_logo_from_url(url: str) -> str:
     try:
         hostname = urlparse(url).netloc.lower()
         hostname = re.sub(r"^www\.", "", hostname)
-        # Use only the registered domain part (drop TLD)
-        domain_key = _norm(hostname.split(".")[0])
+        raw_key  = hostname.split(".")[0]          # e.g. "elpais"
+        domain_key = _norm(raw_key)
     except Exception:
         return DEFAULT_LOGO
 
     if not domain_key:
         return DEFAULT_LOGO
+
+    # ── Step 0: manual mapping takes priority ─────────────────────────────────
+    mappings = _load_mappings()
+    if raw_key in mappings:
+        logo_name = mappings[raw_key]
+        if (MEDIOS_DIR / logo_name).exists():
+            return logo_name
 
     candidates: list[Path] = sorted(
         [p for p in MEDIOS_DIR.glob("*") if p.suffix.lower() in (".png", ".jpg")],
@@ -256,10 +333,25 @@ def _get_section_assets(seccion: str, logo_file: str | None) -> dict:
 
 def _get_font(size: int) -> ImageFont.FreeTypeFont:
     for path in [
+        # Proxima Nova Extra Bold — macOS
+	    # "/Users/aruba/Library/Fonts/ProximaNova-ExtrabldIt.otf",
+	    "/Users/aruba/Library/Fonts/Proxima Nova Extrabold.otf",
+        "/Library/Fonts/ProximaNova-Extrabld.ttf",
+        "/Library/Fonts/Proxima Nova ExtraBold.ttf",
+        "/Library/Fonts/ProximaNovaExtraBold.ttf",
+        "/Library/Fonts/proximanova-extrabold.ttf",
+        # También puede estar en la carpeta del usuario
+        "/Users/Shared/Library/Fonts/ProximaNova-Extrabld.ttf",
+        "~/Library/Fonts/ProximaNova-Extrabld.ttf",
+        # Fallbacks macOS
+        "/Library/Fonts/Arial Bold.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/System/Library/Fonts/ArialHB.ttc",
+        "/Library/Fonts/Arial.ttf",
+        # Fallbacks Windows (por si el código se ejecuta en ambos entornos)
+        "C:/Windows/Fonts/Proxima Nova Extrabold.otf",
         "C:/Windows/Fonts/arialbd.ttf",
         "C:/Windows/Fonts/arial.ttf",
-        "C:/Windows/Fonts/calibrib.ttf",
-        "C:/Windows/Fonts/calibri.ttf",
     ]:
         try:
             return ImageFont.truetype(path, size)
@@ -271,14 +363,38 @@ def _get_font(size: int) -> ImageFont.FreeTypeFont:
         return ImageFont.load_default()
 
 
-def _wrap_lines(text: str, font, max_width: int, draw: ImageDraw.Draw) -> list[str]:
+def _measure_text_width(draw_tmp, text: str, font, letter_spacing: int = 0) -> int:
+    if not text:
+        return 0
+    if letter_spacing == 0:
+        bb = draw_tmp.textbbox((0, 0), text, font=font)
+        return bb[2] - bb[0]
+    total = 0
+    for i, char in enumerate(text):
+        bb = draw_tmp.textbbox((0, 0), char, font=font)
+        total += bb[2] - bb[0]
+        if i < len(text) - 1:
+            total += letter_spacing
+    return total
+
+
+def _draw_text_spaced(draw, x: int, y: int, text: str, font, fill, letter_spacing: int = 0) -> None:
+    if letter_spacing == 0:
+        draw.text((x, y), text, font=font, fill=fill)
+        return
+    for char in text:
+        draw.text((x, y), char, font=font, fill=fill)
+        bb = draw.textbbox((0, 0), char, font=font)
+        x += (bb[2] - bb[0]) + letter_spacing
+
+
+def _wrap_lines(text: str, font, max_width: int, draw: ImageDraw.Draw, letter_spacing: int = 0) -> list[str]:
     words = text.split()
     lines: list[str] = []
     current = ""
     for word in words:
         candidate = (current + " " + word).strip()
-        bbox = draw.textbbox((0, 0), candidate, font=font)
-        if bbox[2] - bbox[0] <= max_width:
+        if _measure_text_width(draw, candidate, font, letter_spacing) <= max_width:
             current = candidate
         else:
             if current:
@@ -289,7 +405,12 @@ def _wrap_lines(text: str, font, max_width: int, draw: ImageDraw.Draw) -> list[s
     return lines or [text]
 
 
-def _render_text_png(titular: str, config: dict) -> tuple[Path, int]:
+def _render_text_png(
+    titular: str,
+    config: dict,
+    font_size_override: int | None = None,
+    letter_spacing: int = 0,
+) -> tuple[Path, int]:
     """
     Render the headline as a transparent 1920×1080 PNG positioned to match
     the Premiere Pro Essential Graphics text layer coordinates from the XML.
@@ -297,29 +418,36 @@ def _render_text_png(titular: str, config: dict) -> tuple[Path, int]:
     """
     text_x = int(TEXT_X_RATIO * WIDTH)                 # ≈277 px from left
     last_line_y = int(config["text_y_ratio"] * HEIGHT)  # fixed Y for the last line
-    max_text_w = WIDTH - text_x - int(WIDTH * 0.25)  # right margin 10%
+    max_text_w = WIDTH - text_x - int(WIDTH * 0.25)  # right margin
 
     canvas = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
 
-    text_up   = titular.upper()
-    font_size = 80
+    text_up   = titular
+    font_size = font_size_override if font_size_override else 100
     min_font  = 32
 
-    draw  = ImageDraw.Draw(canvas, "RGBA")
-    font  = _get_font(font_size)
-    lines = _wrap_lines(text_up, font, max_text_w, draw)
+    draw_tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
 
-    # Shrink font until text block (anchored at last_line_y) fits vertically
-    while font_size >= min_font:
+    if font_size_override:
+        # Use the fixed size as-is, just compute line wrapping
         font      = _get_font(font_size)
-        draw_tmp  = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-        lines     = _wrap_lines(text_up, font, max_text_w, draw_tmp)
+        lines     = _wrap_lines(text_up, font, max_text_w, draw_tmp, letter_spacing)
         sample_bb = draw_tmp.textbbox((0, 0), "Ag", font=font)
         line_h    = (sample_bb[3] - sample_bb[1]) + 10
-        first_line_y = last_line_y - (len(lines) - 1) * line_h
-        if first_line_y >= int(HEIGHT * 0.08):
-            break
-        font_size -= 4
+    else:
+        # Shrink font until text block (anchored at last_line_y) fits vertically
+        font  = _get_font(font_size)
+        lines = _wrap_lines(text_up, font, max_text_w, draw_tmp, letter_spacing)
+        while font_size >= min_font:
+            font      = _get_font(font_size)
+            draw_tmp  = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+            lines     = _wrap_lines(text_up, font, max_text_w, draw_tmp, letter_spacing)
+            sample_bb = draw_tmp.textbbox((0, 0), "Ag", font=font)
+            line_h    = (sample_bb[3] - sample_bb[1]) + 10
+            first_line_y = last_line_y - (len(lines) - 1) * line_h
+            if first_line_y >= int(HEIGHT * 0.08):
+                break
+            font_size -= 4
 
     sample_bb = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), "Ag", font=font)
     line_h    = (sample_bb[3] - sample_bb[1]) + 10
@@ -329,9 +457,9 @@ def _render_text_png(titular: str, config: dict) -> tuple[Path, int]:
     y = first_line_y
     for line in lines:
         # Drop shadow
-        draw.text((text_x + 2, y + 2), line, font=font, fill=(0, 0, 0, 190))
+        _draw_text_spaced(draw, text_x + 2, y + 2, line, font, (0, 0, 0, 190), letter_spacing)
         # White text
-        draw.text((text_x,     y),     line, font=font, fill=(255, 255, 255, 255))
+        _draw_text_spaced(draw, text_x,     y,     line, font, (255, 255, 255, 255), letter_spacing)
         y += line_h
 
     safe = re.sub(r"[^\w]", "_", titular[:30])
@@ -345,12 +473,13 @@ def _render_text_png(titular: str, config: dict) -> tuple[Path, int]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_ffmpeg_cmd(
-    foto_path:    Path,
-    text_png:     Path,
-    config:       dict,
-    assets:       dict,
-    salida:       Path,
-    first_line_y: int = 0,
+    foto_path:        Path,
+    text_png:         Path,
+    config:           dict,
+    assets:           dict,
+    salida:           Path,
+    first_line_y:     int   = 0,
+    color_brightness: float = 1.0,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
     cmd = ["ffmpeg", "-y"]
@@ -427,15 +556,18 @@ def _build_ffmpeg_cmd(
     if "color" in layer_idx:
         i       = layer_idx["color"]
         opacity = config.get("color_opacity", 0.88)
+        # brightness: 1.0 = original, <1 = darker, >1 = brighter (clamp to 0–3)
+        brightness_filter = ""
+        if color_brightness != 1.0:
+            b = max(0.0, min(3.0, color_brightness))
+            brightness_filter = f"eq=brightness={b - 1.0:.3f},"
 
         if color_is_png:
-            # PNG sólido: multiply con un PNG opaco eliminaría casi todos los canales.
-            # En su lugar usamos overlay con opacidad baja (≈20%) para un tinte suave.
-            # Cuando tengas los .mov originales de Premiere, el multiply funcionará bien.
-            png_opacity = min(opacity, 1)  # ~20% máximo
+            png_opacity = min(opacity, 1.0)
             flt.append(
                 f"[{i}:v]scale={WIDTH}:{HEIGHT},"
                 f"format=rgba,"
+                f"{brightness_filter}"
                 f"colorchannelmixer=aa={png_opacity:.3f},"
                 f"setpts=PTS-STARTPTS[col_tint]"
             )
@@ -444,7 +576,7 @@ def _build_ffmpeg_cmd(
             # Vídeo .mov/.mp4: multiply blend auténtico (como en Premiere Pro)
             flt.append(
                 f"[{current}]format=rgb24[base_rgb];"
-                f"[{i}:v]scale={WIDTH}:{HEIGHT},format=rgb24,setpts=PTS-STARTPTS[col_rgb];"
+                f"[{i}:v]scale={WIDTH}:{HEIGHT},{brightness_filter}format=rgb24,setpts=PTS-STARTPTS[col_rgb];"
                 f"[base_rgb][col_rgb]blend=all_mode=multiply:all_opacity={opacity},"
                 f"format=yuv420p[with_col]"
             )
@@ -464,13 +596,13 @@ def _build_ffmpeg_cmd(
     # X aligned with text; Y = 30 px above the first line of text
     if "logo" in layer_idx:
         i = layer_idx["logo"]
-        logo_x = int(TEXT_X_RATIO * WIDTH)
-        logo_y = first_line_y - 30   # ih is subtracted so top-edge lands 30 px above text
+        logo_layout = _get_logo_layout(first_line_y)
         flt.append(
-            f"[{i}:v]setpts=PTS-STARTPTS[logo_l]"
+            f"[{i}:v]scale={logo_layout['width']}:-1,setpts=PTS-STARTPTS[logo_l]"
         )
         flt.append(
-            f"[{current}][logo_l]overlay=x={logo_x}:y={logo_y}-overlay_h:format=auto[with_logo]"
+            f"[{current}][logo_l]overlay="
+            f"x={logo_layout['x']}:y={logo_layout['baseline_y']}-overlay_h:format=auto[with_logo]"
         )
         current = "with_logo"
 
@@ -493,6 +625,119 @@ def _build_ffmpeg_cmd(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Multi-titular list  (stored in memory, not persisted)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Each entry: { id, titular, imagen, seccion, logo_file, source_url,
+#               font_size, letter_spacing, color_brightness, preview }
+_titulares_list: list[dict] = []
+_titulares_lock = threading.Lock()
+
+
+def get_titulares_list() -> list[dict]:
+    with _titulares_lock:
+        return list(_titulares_list)
+
+
+def set_titulares_list(items: list[dict]) -> None:
+    with _titulares_lock:
+        _titulares_list.clear()
+        _titulares_list.extend(items)
+
+
+def generar_preview(item: dict) -> dict:
+    """
+    Composite a still 1920×1080 preview PNG:
+      Track 1 – photo (scaled + cropped)
+      Track 4 – colour overlay PNG (section tint)
+      Track 5 – text layer
+      Track 6 – logo
+    Returns {"ok": bool, "preview": filename | None, "error": str | None}.
+    """
+    try:
+        titular          = (item.get("titular") or "").strip()
+        seccion          = (item.get("seccion") or "SUCESOS").upper()
+        imagen_filename  = (item.get("imagen") or "").strip()
+        source_url       = (item.get("source_url") or "").strip() or None
+        logo_file        = (item.get("logo_file") or "").strip() or None
+        color_brightness = float(item.get("color_brightness") or 1.0)
+        _fs            = item.get("font_size")
+        font_size      = int(_fs) if _fs is not None else None
+        _ls            = item.get("letter_spacing")
+        letter_spacing = int(_ls) if _ls is not None else 0
+
+        config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
+
+        # ── Track 1: Photo ────────────────────────────────────────────────────
+        canvas = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
+        if imagen_filename:
+            foto_path = INPUT / _safe_name(imagen_filename)
+            if not foto_path.exists():
+                foto_path = TITULAR_TEMP / _safe_name(imagen_filename)
+            if foto_path.exists():
+                with Image.open(foto_path) as foto:
+                    foto = foto.convert("RGBA")
+                    # cover + centre crop
+                    scale = max(WIDTH / foto.width, HEIGHT / foto.height)
+                    new_w = int(foto.width  * scale)
+                    new_h = int(foto.height * scale)
+                    foto  = foto.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                    x_off = (new_w - WIDTH)  // 2
+                    y_off = (new_h - HEIGHT) // 2
+                    foto  = foto.crop((x_off, y_off, x_off + WIDTH, y_off + HEIGHT))
+                    canvas.paste(foto, (0, 0))
+
+        # ── Track 4: Colour overlay ────────────────────────────────────────────
+        if not logo_file and source_url:
+            logo_file = _detect_logo_from_url(source_url)
+        elif not logo_file:
+            logo_file = DEFAULT_LOGO
+
+        assets = _get_section_assets(seccion, logo_file)
+
+        if assets.get("color"):
+            ext = assets["color"].suffix.lower()
+            if ext in (".png", ".jpg", ".jpeg"):
+                with Image.open(assets["color"]) as col:
+                    col = col.convert("RGBA").resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
+                    opacity = config.get("color_opacity", 0.88)
+                    # Apply brightness by scaling pixel values
+                    if color_brightness != 1.0:
+                        from PIL import ImageEnhance
+                        col = ImageEnhance.Brightness(col).enhance(color_brightness)
+                    # Adjust alpha channel by opacity
+                    a = col.split()[3]
+                    a = a.point(lambda v: int(v * opacity))
+                    col.putalpha(a)
+                    canvas = Image.alpha_composite(canvas, col)
+
+        # ── Track 5: Text ─────────────────────────────────────────────────────
+        text_png, first_line_y = _render_text_png(titular, config, font_size, letter_spacing)
+        with Image.open(text_png) as txt:
+            canvas = Image.alpha_composite(canvas, txt.convert("RGBA"))
+
+        # ── Track 6: Logo ─────────────────────────────────────────────────────
+        if assets.get("logo"):
+            with Image.open(assets["logo"]) as logo:
+                logo = logo.convert("RGBA")
+                logo_layout = _get_logo_layout(first_line_y)
+                ratio  = logo_layout["width"] / logo.width
+                logo_h = int(logo.height * ratio)
+                logo   = logo.resize((logo_layout["width"], logo_h), Image.Resampling.LANCZOS)
+                logo_y = logo_layout["baseline_y"] - logo_h
+                canvas.paste(logo, (logo_layout["x"], max(0, logo_y)), logo)
+
+        # ── Save ──────────────────────────────────────────────────────────────
+        safe = re.sub(r"[^\w]", "_", titular[:30])
+        out  = TITULAR_TEMP / f"pm_preview_{safe}.jpg"
+        canvas.convert("RGB").save(str(out), "JPEG", quality=88)
+        return {"ok": True, "preview": out.name, "error": None}
+
+    except Exception as exc:
+        return {"ok": False, "preview": None, "error": str(exc)[:300]}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Thread worker
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -503,6 +748,9 @@ def _run_generar(
     seccion: str,
     logo_file: str | None,
     source_url: str | None,
+    font_size: int | None = None,
+    letter_spacing: int = 0,
+    color_brightness: float = 1.0,
 ) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
     try:
@@ -534,7 +782,7 @@ def _run_generar(
             _estado["log"].append(f"ℹ Assets no encontrados (se omiten): {', '.join(missing)}")
 
         _estado["log"].append("→ Renderizando texto...")
-        text_png, first_line_y = _render_text_png(titular, config)
+        text_png, first_line_y = _render_text_png(titular, config, font_size, letter_spacing)
 
         num    = re.sub(r"[^\d]", "", str(numero)).zfill(2) or "01"
         nombre = _safe_name(titular[:50].upper()) or "TITULAR"
@@ -542,7 +790,10 @@ def _run_generar(
 
         _estado["log"].append(f"→ [{num}] Construyendo pipeline FFmpeg...")
 
-        cmd = _build_ffmpeg_cmd(foto_path, text_png, config, assets, salida, first_line_y)
+        cmd = _build_ffmpeg_cmd(
+            foto_path, text_png, config, assets, salida,
+            first_line_y, color_brightness,
+        )
 
         _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
 

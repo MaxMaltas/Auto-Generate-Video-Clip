@@ -235,60 +235,28 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- TAB: TITULARES -->
 <div class="panel" id="tab-titulares">
 
+  <!-- Extractor de URL -->
   <div class="card">
     <h2>Extraer de URL</h2>
     <div class="row" style="gap:.75rem">
       <input type="url" id="t-url" placeholder="https://www.elpais.com/noticia/..." class="flex-1">
-      <button class="btn btn-primary" id="btn-t-extraer" onclick="titularesExtraer()">Extraer</button>
+      <button class="btn btn-primary" id="btn-t-extraer" onclick="titularesExtraer()">Extraer y añadir</button>
     </div>
   </div>
 
-  <div class="card" id="t-preview-card" style="display:none">
-    <h2>Vista previa</h2>
-    <div style="display:grid;grid-template-columns:1fr 280px;gap:1.5rem;align-items:start">
-
-      <div>
-        <h3>Titular (editable)</h3>
-        <textarea id="t-titular" rows="3"
-          style="background:var(--bg);border:1px solid var(--border);color:var(--text);
-                 padding:10px 12px;border-radius:8px;font-size:15px;font-family:inherit;
-                 width:100%;resize:vertical;line-height:1.5"></textarea>
-
-        <div style="display:flex;gap:1rem;align-items:flex-end;margin-top:1rem;flex-wrap:wrap">
-          <div>
-            <h3>Número</h3>
-            <input type="text" id="t-numero" value="01" style="width:80px;text-align:center">
-          </div>
-          <div>
-            <h3>Sección</h3>
-            <select id="t-seccion" style="width:150px">
-              <option value="SUCESOS">SUCESOS</option>
-              <option value="BOLETINES">BOLETINES</option>
-              <option value="PROTAS">PROTAS</option>
-              <option value="INFO">INFO</option>
-              <option value="DEPORTES">DEPORTES</option>
-            </select>
-          </div>
-          <button class="btn btn-success" id="btn-t-generar" onclick="titularesGenerarPremiere()">▶ Generar Premiere (50s)</button>
-          <button class="btn btn-ghost" id="btn-t-generar-rapido" onclick="titularesGenerar()" title="Generación rápida sin capas Premiere">▶ Rápido</button>
-        </div>
-      </div>
-
-      <div>
-        <h3>Imagen extraída</h3>
-        <img id="t-foto"
-          style="width:100%;border-radius:8px;display:none;object-fit:cover;
-                 max-height:180px;border:1px solid var(--border)">
-        <div id="t-foto-placeholder"
-          style="display:flex;align-items:center;justify-content:center;
-                 height:120px;border:1px dashed var(--border);border-radius:8px;
-                 color:var(--muted);font-size:13px">
-          Sin imagen
-        </div>
-      </div>
+  <!-- Lista de titulares -->
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
+      <h2 style="margin:0">Lista de titulares</h2>
+      <button class="btn btn-ghost" style="margin-left:auto" onclick="tAddEmpty()">+ Añadir vacío</button>
+    </div>
+    <div id="t-lista" style="display:flex;flex-direction:column;gap:1rem"></div>
+    <div id="t-lista-empty" style="color:var(--muted);font-size:14px;padding:.5rem 0">
+      Sin titulares. Extrae desde una URL o añade uno vacío.
     </div>
   </div>
 
+  <!-- Progreso -->
   <div class="card" id="t-status-card" style="display:none">
     <h2>Progreso</h2>
     <div class="progress-bar" style="height:6px;margin-bottom:1rem">
@@ -374,6 +342,7 @@ function showTab(id) {
   if(id==='clips') cargarClips();
   if(id==='pauta') cargarFotos();
   if(id==='editor') initEditor();
+  if(id==='titulares') tCargarLogos();
 }
 
 // ── DRAG & DROP ──
@@ -767,6 +736,161 @@ async function procesarFoto() {
 
 // ── TITULARES ─────────────────────────────────────────────────────────────────
 
+// In-memory list of titular items
+// Each: { id, titular, imagen, source_url, seccion, font_size, letter_spacing, color_brightness, preview }
+let tLista = [];
+let tNextId = 1;
+let tLogos  = [];   // loaded once from server
+
+async function tCargarLogos() {
+  if (tLogos.length) return;
+  try {
+    tLogos = await fetch('/titulares/logos').then(r => r.json());
+  } catch(e) { /* silencioso */ }
+}
+
+function tSecciones() {
+  return ['SUCESOS','BOLETINES','PROTAS','INFO','DEPORTES'];
+}
+
+function tLogoOptions(selected) {
+  const none = `<option value="">— auto-detectar —</option>`;
+  return none + tLogos.map(l =>
+    `<option value="${l}"${l===selected?' selected':''}>${l.replace(/_NEG\.(png|jpg)$/i,'.$1')}</option>`
+  ).join('');
+}
+
+function tRender() {
+  const container = document.getElementById('t-lista');
+  const empty     = document.getElementById('t-lista-empty');
+  if (!tLista.length) {
+    container.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  container.innerHTML = tLista.map((item, idx) => `
+    <div class="card" style="margin-bottom:0;position:relative" id="t-item-${item.id}">
+      <div style="display:grid;grid-template-columns:1fr 220px;gap:1.25rem;align-items:start">
+
+        <!-- Left: text + controls -->
+        <div>
+          <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
+            <span style="font-size:12px;color:var(--muted);font-weight:600">#${idx+1}</span>
+            <select style="width:130px" onchange="tUpdate(${item.id},'seccion',this.value)">
+              ${tSecciones().map(s=>`<option value="${s}"${item.seccion===s?' selected':''}>${s}</option>`).join('')}
+            </select>
+            <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;margin-left:auto"
+              onclick="tRemove(${item.id})">✕</button>
+          </div>
+
+          <textarea rows="3" style="background:var(--bg);border:1px solid var(--border);color:var(--text);
+            padding:8px 10px;border-radius:8px;font-size:14px;font-family:inherit;width:100%;resize:vertical;line-height:1.5"
+            oninput="tUpdate(${item.id},'titular',this.value)">${item.titular||''}</textarea>
+
+          <!-- Logo selector -->
+          <div style="margin-top:.75rem">
+            <h3>Logo del medio</h3>
+            <select style="width:100%" onchange="tLogoChange(${item.id}, this.value)">
+              ${tLogoOptions(item.logo_file||'')}
+            </select>
+            ${item.logo_file
+              ? `<div style="font-size:11px;color:var(--green);margin-top:3px">✓ Guardado para «${item.source_url ? new URL(item.source_url).hostname.replace(/^www\./,'') : ''}»</div>`
+              : (item.source_url ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">Auto-detectado desde URL</div>` : '')
+            }
+          </div>
+
+          <!-- Ajustes de texto -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-top:.75rem;align-items:end">
+            <div>
+              <h3>Tamaño texto (px)</h3>
+              <input type="number" min="20" max="200" placeholder="Auto"
+                value="${item.font_size||''}"
+                oninput="tUpdate(${item.id},'font_size',this.value?parseInt(this.value):null)"
+                style="width:100%">
+            </div>
+            <div>
+              <h3>Espaciado letras (px)</h3>
+              <input type="number" min="-10" max="50" value="${item.letter_spacing||0}"
+                oninput="tUpdate(${item.id},'letter_spacing',parseInt(this.value)||0)"
+                style="width:100%">
+            </div>
+            <div>
+              <h3>Brillo color (0–2)</h3>
+              <input type="range" min="0" max="2" step="0.05"
+                value="${item.color_brightness!=null?item.color_brightness:1.0}"
+                oninput="tUpdate(${item.id},'color_brightness',parseFloat(this.value));this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)"
+                style="width:100%;accent-color:var(--accent)">
+              <div style="font-size:12px;color:var(--muted);text-align:center">${(item.color_brightness!=null?item.color_brightness:1.0).toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
+            <button class="btn btn-ghost" style="font-size:13px" onclick="tPreview(${item.id})">👁 Preview</button>
+            <button class="btn btn-success" style="font-size:13px" onclick="tGenerar(${item.id})">▶ Generar (50s)</button>
+          </div>
+        </div>
+
+        <!-- Right: image + preview -->
+        <div>
+          <h3>Imagen</h3>
+          ${item.imagen
+            ? `<img src="/titulares/thumb/${encodeURIComponent(item.imagen)}?t=${Date.now()}"
+                style="width:100%;border-radius:8px;object-fit:cover;max-height:130px;border:1px solid var(--border);display:block;margin-bottom:.5rem">`
+            : `<div style="height:90px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;margin-bottom:.5rem">Sin imagen</div>`
+          }
+          ${item.preview
+            ? `<h3 style="margin-top:.5rem">Preview</h3>
+               <img src="/titulares/pm-thumb/${encodeURIComponent(item.preview)}?t=${Date.now()}"
+                style="width:100%;border-radius:6px;border:1px solid var(--border);display:block;background:#111">`
+            : ''
+          }
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function tUpdate(id, key, value) {
+  const item = tLista.find(i=>i.id===id);
+  if (item) { item[key] = value; item.preview = null; }
+}
+
+async function tLogoChange(id, logoFile) {
+  const item = tLista.find(i=>i.id===id);
+  if (!item) return;
+  item.logo_file = logoFile || null;
+  item.preview   = null;
+
+  // Persist mapping if we have a source URL and a logo was chosen
+  if (logoFile && item.source_url) {
+    try {
+      const hostname   = new URL(item.source_url).hostname.replace(/^www\./, '');
+      const domain_key = hostname.split('.')[0].toLowerCase();
+      await fetch('/titulares/logo-mapping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain_key, logo_file: logoFile }),
+      });
+      showToast(`Relación guardada: ${domain_key} → ${logoFile}`);
+    } catch(e) { /* silencioso */ }
+  }
+  tRender();
+}
+
+function tRemove(id) {
+  tLista = tLista.filter(i=>i.id!==id);
+  tRender();
+}
+
+function tAddEmpty() {
+  tLista.push({
+    id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
+    logo_file: null, font_size: null, letter_spacing: 0, color_brightness: 1.0, preview: null,
+  });
+  tRender();
+}
+
 async function titularesExtraer() {
   const url = document.getElementById('t-url').value.trim();
   if (!url) { showToast('Introduce una URL', true); return; }
@@ -774,8 +898,6 @@ async function titularesExtraer() {
   const btn = document.getElementById('btn-t-extraer');
   btn.disabled = true;
   btn.textContent = 'Extrayendo...';
-  document.getElementById('t-preview-card').style.display = 'none';
-  document.getElementById('t-status-card').style.display = 'none';
 
   try {
     const r = await fetch('/titulares/extraer', {
@@ -784,98 +906,108 @@ async function titularesExtraer() {
       body: JSON.stringify({ url }),
     });
     const d = await r.json();
-
     if (!d.ok) { showToast('Error: ' + d.error, true); return; }
 
-    document.getElementById('t-titular').value = d.titular || '';
-
-    const foto = document.getElementById('t-foto');
-    const ph   = document.getElementById('t-foto-placeholder');
-    if (d.imagen) {
-      foto.src = '/titulares/thumb/' + encodeURIComponent(d.imagen) + '?t=' + Date.now();
-      foto.style.display = 'block';
-      ph.style.display = 'none';
-      foto.dataset.filename = d.imagen;
-    } else {
-      foto.style.display = 'none';
-      ph.style.display = 'flex';
-      foto.dataset.filename = '';
-    }
-
-    document.getElementById('t-preview-card').style.display = 'block';
-    showToast('Extraído ✓');
+    tLista.push({
+      id: tNextId++,
+      titular: d.titular || '',
+      imagen: d.imagen || '',
+      source_url: url,
+      seccion: 'SUCESOS',
+      logo_file: d.logo_file || null,
+      font_size: null,
+      letter_spacing: 0,
+      color_brightness: 1.0,
+      preview: null,
+    });
+    tRender();
+    showToast('Titular añadido ✓');
   } catch (e) {
     showToast('Error de conexión', true);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Extraer';
+    btn.textContent = 'Extraer y añadir';
   }
 }
 
-async function titularesGenerar() {
-  const titular = document.getElementById('t-titular').value.trim();
-  const imagen  = document.getElementById('t-foto').dataset.filename || '';
-  const numero  = document.getElementById('t-numero').value.trim() || '01';
-
-  if (!titular) { showToast('El titular está vacío', true); return; }
-  if (!imagen)  { showToast('No hay imagen disponible', true); return; }
-
-  const btn = document.getElementById('btn-t-generar-rapido');
-  btn.disabled = true;
-
-  const statusCard = document.getElementById('t-status-card');
-  statusCard.style.display = 'block';
-  document.getElementById('t-log').innerHTML = '<span class="info">Iniciando...</span>';
-  document.getElementById('t-fill').style.width = '0%';
-
-  const r = await fetch('/titulares/generar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ titular, imagen, numero }),
-  });
-  const d = await r.json();
-
-  if (!d.ok) {
-    showToast('Error: ' + d.error, true);
-    btn.disabled = false;
-    return;
+async function tPreview(id) {
+  const item = tLista.find(i=>i.id===id);
+  if (!item) return;
+  const btn = document.querySelector(`#t-item-${id} .btn-ghost`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
+  try {
+    const r = await fetch('/titulares/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        titular:        item.titular,
+        seccion:        item.seccion,
+        imagen:         item.imagen,
+        source_url:     item.source_url || '',
+        logo_file:      item.logo_file  || null,
+        font_size:      item.font_size  || null,
+        letter_spacing: item.letter_spacing || 0,
+        color_brightness: item.color_brightness != null ? item.color_brightness : 1.0,
+      }),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      item.preview = d.preview;
+      tRender();
+    } else {
+      showToast('Error preview: ' + d.error, true);
+      if (btn) { btn.disabled = false; btn.textContent = '👁 Preview texto'; }
+    }
+  } catch(e) {
+    showToast('Error de conexión', true);
+    if (btn) { btn.disabled = false; btn.textContent = '👁 Preview texto'; }
   }
-
-  _titularesPoll(btn, '/titulares/estado');
 }
 
-async function titularesGenerarPremiere() {
-  const titular    = document.getElementById('t-titular').value.trim();
-  const imagen     = document.getElementById('t-foto').dataset.filename || '';
-  const numero     = document.getElementById('t-numero').value.trim() || '01';
-  const seccion    = document.getElementById('t-seccion').value;
-  const source_url = document.getElementById('t-url').value.trim();
+async function tGenerar(id) {
+  const item = tLista.find(i=>i.id===id);
+  if (!item) return;
+  if (!item.titular) { showToast('El titular está vacío', true); return; }
+  if (!item.imagen)  { showToast('No hay imagen en este titular', true); return; }
 
-  if (!titular) { showToast('El titular está vacío', true); return; }
-  if (!imagen)  { showToast('No hay imagen disponible', true); return; }
-
-  const btn = document.getElementById('btn-t-generar');
-  btn.disabled = true;
+  const btn = document.querySelector(`#t-item-${id} .btn-success`);
+  if (btn) btn.disabled = true;
 
   const statusCard = document.getElementById('t-status-card');
   statusCard.style.display = 'block';
   document.getElementById('t-log').innerHTML = '<span class="info">Iniciando generación Premiere...</span>';
   document.getElementById('t-fill').style.width = '5%';
 
-  const r = await fetch('/titulares/generar-premiere', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ titular, imagen, numero, seccion, source_url }),
-  });
-  const d = await r.json();
+  const idx = tLista.indexOf(item);
+  const numero = String(idx + 1).padStart(2, '0');
 
-  if (!d.ok) {
-    showToast('Error: ' + d.error, true);
-    btn.disabled = false;
-    return;
+  try {
+    const r = await fetch('/titulares/generar-premiere', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        titular:          item.titular,
+        imagen:           item.imagen,
+        numero,
+        seccion:          item.seccion,
+        source_url:       item.source_url       || '',
+        logo:             item.logo_file         || null,
+        font_size:        item.font_size         || null,
+        letter_spacing:   item.letter_spacing    || 0,
+        color_brightness: item.color_brightness != null ? item.color_brightness : 1.0,
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) {
+      showToast('Error: ' + d.error, true);
+      if (btn) btn.disabled = false;
+      return;
+    }
+    _titularesPoll(btn, '/titulares/estado-premiere');
+  } catch(e) {
+    showToast('Error de conexión', true);
+    if (btn) btn.disabled = false;
   }
-
-  _titularesPoll(btn, '/titulares/estado-premiere');
 }
 
 function _titularesPoll(btn, estadoUrl) {
