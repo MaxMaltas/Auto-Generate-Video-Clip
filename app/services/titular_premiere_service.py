@@ -97,8 +97,8 @@ TITULAR_FRAMES   = TITULAR_DURATION * FPS   # 1 250 frames
 # color_opacity        : opacity of the multiply-blend colour layer (0–1)
 # text_y_ratio         : normalised Y position of the headline text
 TEXT_X_RATIO = 0.14446   # same for all sections
-LOGO_WIDTH = 300
-LOGO_TEXT_GAP = 30
+LOGO_WIDTH = 1150
+LOGO_TEXT_GAP = -40
 
 SECTION_CONFIGS: dict[str, dict] = {
     "BOLETINES": {
@@ -166,7 +166,7 @@ def iniciar_generacion(
     logo_file: str | None = None,
     source_url: str | None = None,
     font_size: int | None = None,
-    letter_spacing: int = 0,
+    letter_spacing: int = -2,
     color_brightness: float = 1.0,
 ) -> bool:
     with _lock:
@@ -177,6 +177,19 @@ def iniciar_generacion(
         target=_run_generar,
         args=(titular, imagen_filename, numero, seccion, logo_file, source_url,
               font_size, letter_spacing, color_brightness),
+        daemon=True,
+    ).start()
+    return True
+
+
+def iniciar_generacion_lista(items: list[dict]) -> bool:
+    with _lock:
+        if _estado["running"]:
+            return False
+        _estado["running"] = True
+    threading.Thread(
+        target=_run_generar_lista,
+        args=(list(items),),
         daemon=True,
     ).start()
     return True
@@ -363,7 +376,7 @@ def _get_font(size: int) -> ImageFont.FreeTypeFont:
         return ImageFont.load_default()
 
 
-def _measure_text_width(draw_tmp, text: str, font, letter_spacing: int = 0) -> int:
+def _measure_text_width(draw_tmp, text: str, font, letter_spacing: int = -2) -> int:
     if not text:
         return 0
     if letter_spacing == 0:
@@ -378,7 +391,7 @@ def _measure_text_width(draw_tmp, text: str, font, letter_spacing: int = 0) -> i
     return total
 
 
-def _draw_text_spaced(draw, x: int, y: int, text: str, font, fill, letter_spacing: int = 0) -> None:
+def _draw_text_spaced(draw, x: int, y: int, text: str, font, fill, letter_spacing: int = -2) -> None:
     if letter_spacing == 0:
         draw.text((x, y), text, font=font, fill=fill)
         return
@@ -388,7 +401,7 @@ def _draw_text_spaced(draw, x: int, y: int, text: str, font, fill, letter_spacin
         x += (bb[2] - bb[0]) + letter_spacing
 
 
-def _wrap_lines(text: str, font, max_width: int, draw: ImageDraw.Draw, letter_spacing: int = 0) -> list[str]:
+def _wrap_lines(text: str, font, max_width: int, draw: ImageDraw.Draw, letter_spacing: int = -2) -> list[str]:
     words = text.split()
     lines: list[str] = []
     current = ""
@@ -409,7 +422,7 @@ def _render_text_png(
     titular: str,
     config: dict,
     font_size_override: int | None = None,
-    letter_spacing: int = 0,
+    letter_spacing: int = -2,
 ) -> tuple[Path, int]:
     """
     Render the headline as a transparent 1920×1080 PNG positioned to match
@@ -664,7 +677,7 @@ def generar_preview(item: dict) -> dict:
         _fs            = item.get("font_size")
         font_size      = int(_fs) if _fs is not None else None
         _ls            = item.get("letter_spacing")
-        letter_spacing = int(_ls) if _ls is not None else 0
+        letter_spacing = int(_ls) if _ls is not None else -2
 
         config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
 
@@ -741,6 +754,76 @@ def generar_preview(item: dict) -> dict:
 # Thread worker
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _generar_clip_item(
+    item: dict,
+    numero: str,
+    item_index: int | None = None,
+    total_items: int | None = None,
+) -> str:
+    titular = (item.get("titular") or "").strip()
+    imagen_filename = (item.get("imagen") or "").strip()
+    seccion = (item.get("seccion") or "SUCESOS").strip().upper()
+    logo_file = (item.get("logo_file") or item.get("logo") or "").strip() or None
+    source_url = (item.get("source_url") or "").strip() or None
+    font_size_raw = item.get("font_size")
+    letter_spacing = int(item.get("letter_spacing") or 0)
+    color_brightness = float(item.get("color_brightness") or 1.0)
+    font_size = int(font_size_raw) if font_size_raw not in (None, "") else None
+
+    if not titular:
+        raise ValueError("Titular vacío")
+    if not imagen_filename:
+        raise ValueError("Imagen no especificada")
+
+    sec = seccion.upper()
+    config = SECTION_CONFIGS.get(sec, SECTION_CONFIGS["SUCESOS"])
+
+    foto_path = INPUT / _safe_name(imagen_filename)
+    if not foto_path.exists():
+        foto_path = TITULAR_TEMP / _safe_name(imagen_filename)
+    if not foto_path.exists():
+        raise FileNotFoundError(f"Foto no encontrada: {imagen_filename}")
+
+    if item_index is not None and total_items is not None:
+        _estado["log"].append(f"→ Procesando titular {item_index}/{total_items}")
+
+    if not logo_file and source_url:
+        logo_file = _detect_logo_from_url(source_url)
+        _estado["log"].append(f"→ Logo detectado: {logo_file}")
+    elif not logo_file:
+        logo_file = DEFAULT_LOGO
+
+    assets = _get_section_assets(sec, logo_file)
+    found = [k for k, v in assets.items() if v]
+    missing = [k for k, v in assets.items() if not v]
+    _estado["log"].append(f"→ Sección: {sec}")
+    _estado["log"].append(f"→ Assets encontrados: {', '.join(found) or 'ninguno'}")
+    if missing:
+        _estado["log"].append(f"ℹ Assets no encontrados (se omiten): {', '.join(missing)}")
+
+    _estado["log"].append("→ Renderizando texto...")
+    text_png, first_line_y = _render_text_png(titular, config, font_size, letter_spacing)
+
+    num = re.sub(r"[^\d]", "", str(numero)).zfill(2) or "01"
+    nombre = _safe_name(titular[:50].upper()) or "TITULAR"
+    salida = OUTPUT / f"{num} {nombre}.mp4"
+
+    _estado["log"].append(f"→ [{num}] Construyendo pipeline FFmpeg...")
+    cmd = _build_ffmpeg_cmd(
+        foto_path, text_png, config, assets, salida,
+        first_line_y, color_brightness,
+    )
+
+    _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+
+    if result.returncode != 0:
+        err_tail = (result.stderr or "")[-300:].strip()
+        raise RuntimeError(err_tail or "FFmpeg devolvió código de error")
+
+    return f"{num} {nombre}.mp4"
+
+
 def _run_generar(
     titular: str,
     imagen_filename: str,
@@ -749,66 +832,50 @@ def _run_generar(
     logo_file: str | None,
     source_url: str | None,
     font_size: int | None = None,
-    letter_spacing: int = 0,
+    letter_spacing: int = -2,
     color_brightness: float = 1.0,
 ) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
     try:
-        sec    = seccion.upper()
-        config = SECTION_CONFIGS.get(sec, SECTION_CONFIGS["SUCESOS"])
-
-        foto_path = INPUT / _safe_name(imagen_filename)
-        if not foto_path.exists():
-            # Fall back: look in TITULAR_TEMP (downloaded via URL extractor)
-            foto_path = TITULAR_TEMP / _safe_name(imagen_filename)
-        if not foto_path.exists():
-            raise FileNotFoundError(f"Foto no encontrada: {imagen_filename}")
-
-        # Auto-detect logo from URL when no explicit logo was provided
-        if not logo_file and source_url:
-            logo_file = _detect_logo_from_url(source_url)
-            _estado["log"].append(f"→ Logo detectado: {logo_file}")
-        elif not logo_file:
-            logo_file = DEFAULT_LOGO
-
-        assets = _get_section_assets(sec, logo_file)
-
-        # Log which assets were found
-        found = [k for k, v in assets.items() if v]
-        missing = [k for k, v in assets.items() if not v]
-        _estado["log"].append(f"→ Sección: {sec}")
-        _estado["log"].append(f"→ Assets encontrados: {', '.join(found) or 'ninguno'}")
-        if missing:
-            _estado["log"].append(f"ℹ Assets no encontrados (se omiten): {', '.join(missing)}")
-
-        _estado["log"].append("→ Renderizando texto...")
-        text_png, first_line_y = _render_text_png(titular, config, font_size, letter_spacing)
-
-        num    = re.sub(r"[^\d]", "", str(numero)).zfill(2) or "01"
-        nombre = _safe_name(titular[:50].upper()) or "TITULAR"
-        salida = OUTPUT / f"{num} {nombre}.mp4"
-
-        _estado["log"].append(f"→ [{num}] Construyendo pipeline FFmpeg...")
-
-        cmd = _build_ffmpeg_cmd(
-            foto_path, text_png, config, assets, salida,
-            first_line_y, color_brightness,
+        nombre_archivo = _generar_clip_item(
+            {
+                "titular": titular,
+                "imagen": imagen_filename,
+                "seccion": seccion,
+                "logo_file": logo_file,
+                "source_url": source_url,
+                "font_size": font_size,
+                "letter_spacing": letter_spacing,
+                "color_brightness": color_brightness,
+            },
+            numero,
         )
-
-        _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
-
-        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-
-        if result.returncode != 0:
-            # Surface the last 300 chars of stderr for diagnosis
-            err_tail = (result.stderr or "")[-300:].strip()
-            raise RuntimeError(err_tail or "FFmpeg devolvió código de error")
-
         _estado["done"] = 1
-        _estado["log"].append(f"✓ {num} {nombre}.mp4")
+        _estado["log"].append(f"OK {nombre_archivo}")
 
     except Exception as exc:
         _estado["errors"] = 1
-        _estado["log"].append(f"✗ Error: {str(exc)[:200]}")
+        _estado["log"].append(f"ERR Error: {str(exc)[:200]}")
+    finally:
+        _estado["running"] = False
+
+
+def _run_generar_lista(items: list[dict]) -> None:
+    valid_items = [item for item in items if isinstance(item, dict)]
+    _estado.update({"log": [], "done": 0, "errors": 0, "total": len(valid_items)})
+    try:
+        if not valid_items:
+            raise ValueError("No hay titulares en la lista")
+
+        for idx, item in enumerate(valid_items, start=1):
+            numero = str(idx).zfill(2)
+            try:
+                nombre_archivo = _generar_clip_item(item, numero, idx, len(valid_items))
+                _estado["done"] = idx
+                _estado["log"].append(f"OK {nombre_archivo}")
+            except Exception as exc:
+                _estado["errors"] += 1
+                _estado["done"] = idx
+                _estado["log"].append(f"ERR [{numero}] {str(exc)[:200]}")
     finally:
         _estado["running"] = False

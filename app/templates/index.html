@@ -248,6 +248,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <div class="card">
     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
       <h2 style="margin:0">Lista de titulares</h2>
+      <button class="btn btn-primary" id="btn-t-generar-todos" onclick="tGenerarTodos()">▶ Generar todos</button>
       <button class="btn btn-ghost" style="margin-left:auto" onclick="tAddEmpty()">+ Añadir vacío</button>
     </div>
     <div id="t-lista" style="display:flex;flex-direction:column;gap:1rem"></div>
@@ -811,8 +812,8 @@ function tRender() {
             </div>
             <div>
               <h3>Espaciado letras (px)</h3>
-              <input type="number" min="-10" max="50" value="${item.letter_spacing||0}"
-                oninput="tUpdate(${item.id},'letter_spacing',parseInt(this.value)||0)"
+              <input type="number" min="-10" max="50" value="${item.letter_spacing||-2}"
+                oninput="tUpdate(${item.id},'letter_spacing',parseInt(this.value)||-2)"
                 style="width:100%">
             </div>
             <div>
@@ -886,7 +887,7 @@ function tRemove(id) {
 function tAddEmpty() {
   tLista.push({
     id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
-    logo_file: null, font_size: null, letter_spacing: 0, color_brightness: 1.0, preview: null,
+    logo_file: null, font_size: null, letter_spacing: -2, color_brightness: 1.0, preview: null,
   });
   tRender();
 }
@@ -916,7 +917,7 @@ async function titularesExtraer() {
       seccion: 'SUCESOS',
       logo_file: d.logo_file || null,
       font_size: null,
-      letter_spacing: 0,
+      letter_spacing: -2,
       color_brightness: 1.0,
       preview: null,
     });
@@ -946,7 +947,7 @@ async function tPreview(id) {
         source_url:     item.source_url || '',
         logo_file:      item.logo_file  || null,
         font_size:      item.font_size  || null,
-        letter_spacing: item.letter_spacing || 0,
+        letter_spacing: item.letter_spacing || -2,
         color_brightness: item.color_brightness != null ? item.color_brightness : 1.0,
       }),
     });
@@ -964,10 +965,25 @@ async function tPreview(id) {
   }
 }
 
+function tBuildPayload(item, numero) {
+  return {
+    titular: item.titular,
+    imagen: item.imagen,
+    numero,
+    seccion: item.seccion,
+    source_url: item.source_url || '',
+    logo: item.logo_file || null,
+    logo_file: item.logo_file || null,
+    font_size: item.font_size || null,
+    letter_spacing: item.letter_spacing || -2,
+    color_brightness: item.color_brightness != null ? item.color_brightness : 1.0,
+  };
+}
+
 async function tGenerar(id) {
   const item = tLista.find(i=>i.id===id);
   if (!item) return;
-  if (!item.titular) { showToast('El titular está vacío', true); return; }
+  if (!item.titular) { showToast('El titular est?? vac??o', true); return; }
   if (!item.imagen)  { showToast('No hay imagen en este titular', true); return; }
 
   const btn = document.querySelector(`#t-item-${id} .btn-success`);
@@ -975,7 +991,7 @@ async function tGenerar(id) {
 
   const statusCard = document.getElementById('t-status-card');
   statusCard.style.display = 'block';
-  document.getElementById('t-log').innerHTML = '<span class="info">Iniciando generación Premiere...</span>';
+  document.getElementById('t-log').innerHTML = '<span class="info">Iniciando generaci??n Premiere...</span>';
   document.getElementById('t-fill').style.width = '5%';
 
   const idx = tLista.indexOf(item);
@@ -985,17 +1001,7 @@ async function tGenerar(id) {
     const r = await fetch('/titulares/generar-premiere', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        titular:          item.titular,
-        imagen:           item.imagen,
-        numero,
-        seccion:          item.seccion,
-        source_url:       item.source_url       || '',
-        logo:             item.logo_file         || null,
-        font_size:        item.font_size         || null,
-        letter_spacing:   item.letter_spacing    || 0,
-        color_brightness: item.color_brightness != null ? item.color_brightness : 1.0,
-      }),
+      body: JSON.stringify(tBuildPayload(item, numero)),
     });
     const d = await r.json();
     if (!d.ok) {
@@ -1005,7 +1011,44 @@ async function tGenerar(id) {
     }
     _titularesPoll(btn, '/titulares/estado-premiere');
   } catch(e) {
-    showToast('Error de conexión', true);
+    showToast('Error de conexi??n', true);
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function tGenerarTodos() {
+  if (!tLista.length) { showToast('No hay titulares en la lista', true); return; }
+
+  const invalid = tLista.find(item => !(item.titular || '').trim() || !(item.imagen || '').trim());
+  if (invalid) {
+    showToast('Todos los titulares deben tener texto e imagen antes de generar', true);
+    return;
+  }
+
+  const btn = document.getElementById('btn-t-generar-todos');
+  if (btn) btn.disabled = true;
+
+  const statusCard = document.getElementById('t-status-card');
+  statusCard.style.display = 'block';
+  document.getElementById('t-log').innerHTML = '<span class="info">Iniciando generaci??n de toda la lista...</span>';
+  document.getElementById('t-fill').style.width = '5%';
+
+  try {
+    const payload = tLista.map((item, idx) => tBuildPayload(item, String(idx + 1).padStart(2, '0')));
+    const r = await fetch('/titulares/generar-premiere-todos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (!d.ok) {
+      showToast('Error: ' + d.error, true);
+      if (btn) btn.disabled = false;
+      return;
+    }
+    _titularesPoll(btn, '/titulares/estado-premiere');
+  } catch(e) {
+    showToast('Error de conexi??n', true);
     if (btn) btn.disabled = false;
   }
 }
@@ -1021,14 +1064,14 @@ function _titularesPoll(btn, estadoUrl) {
 
     const log = document.getElementById('t-log');
     log.innerHTML = d.log.map(l =>
-      `<div class="${l.startsWith('✓') ? 'ok' : l.startsWith('✗') ? 'err' : 'info'}">${l}</div>`
+      `<div class="${l.startsWith('OK ') || l.startsWith('?') ? 'ok' : l.startsWith('ERR ') || l.startsWith('?') ? 'err' : 'info'}">${l}</div>`
     ).join('');
     log.scrollTop = log.scrollHeight;
 
     if (!d.running) {
       clearInterval(interval);
       if (btn) btn.disabled = false;
-      if (d.done > 0) { showToast('Clip generado ✓'); cargarClips(); }
+      if (d.done > 0) { const msg = d.total > 1 ? `Generados ${d.done} clips` : 'Clip generado ?'; showToast(d.errors ? `${msg} con ${d.errors} error(es)` : msg); cargarClips(); }
     }
   }, 800);
 }

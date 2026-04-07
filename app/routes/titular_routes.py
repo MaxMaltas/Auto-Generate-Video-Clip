@@ -85,7 +85,7 @@ def generar_premiere():
     logo             = (data.get("logo")       or "").strip() or None
     source_url       = (data.get("source_url") or "").strip() or None
     font_size_raw    = data.get("font_size")
-    letter_spacing   = int(data.get("letter_spacing", 0) or 0)
+    letter_spacing   = int(data.get("letter_spacing", -2) or 0)
     color_brightness = float(data.get("color_brightness", 1.0) or 1.0)
     font_size        = int(font_size_raw) if font_size_raw else None
 
@@ -96,6 +96,17 @@ def generar_premiere():
         titular, imagen, numero, seccion, logo, source_url,
         font_size, letter_spacing, color_brightness,
     )
+    if not started:
+        return jsonify({"ok": False, "error": "Ya hay una generación en curso"})
+    return jsonify({"ok": True})
+
+
+@titular_bp.route("/titulares/generar-premiere-todos", methods=["POST"])
+def generar_premiere_todos():
+    items = request.get_json(force=True)
+    if not isinstance(items, list):
+        return jsonify({"ok": False, "error": "Se esperaba un array de titulares"})
+    started = pm_svc.iniciar_generacion_lista(items)
     if not started:
         return jsonify({"ok": False, "error": "Ya hay una generación en curso"})
     return jsonify({"ok": True})
