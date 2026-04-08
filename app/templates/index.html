@@ -81,7 +81,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <div class="tabs">
   <div class="tab active" onclick="showTab('pauta')">📋 Pauta</div>
   <div class="tab" onclick="showTab('editor')">📷 Editor</div>
-  <div class="tab" onclick="showTab('generar')">⚙️ Generar</div>
   <div class="tab" onclick="showTab('clips')">🎬 Clips</div>
   <div class="tab" onclick="showTab('titulares')">🗞️ Titulares</div>
 </div>
@@ -122,6 +121,20 @@ tr:hover td{background:rgba(255,255,255,.02)}
       </tr></thead>
       <tbody id="pauta-body"></tbody>
     </table>
+  </div>
+
+  <div class="card">
+    <h2>Generación de clips</h2>
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem">
+      <button class="btn btn-primary" id="btn-generar" onclick="generarClips()">▶ Generar todos los clips</button>
+      <div id="gen-stats" style="font-size:14px;color:var(--muted)"></div>
+    </div>
+    <div class="progress-bar" style="height:6px;margin-bottom:1rem">
+      <div class="progress-fill" id="gen-fill" style="width:0%"></div>
+    </div>
+    <div class="log-box" id="log-box">
+      <span class="info">Esperando...</span>
+    </div>
   </div>
 </div>
 
@@ -215,23 +228,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
-<!-- TAB: GENERAR -->
-<div class="panel" id="tab-generar">
-  <div class="card">
-    <h2>Estado del proceso</h2>
-    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem">
-      <button class="btn btn-primary" id="btn-generar" onclick="generarClips()">▶ Generar todos los clips</button>
-      <div id="gen-stats" style="font-size:14px;color:var(--muted)"></div>
-    </div>
-    <div class="progress-bar" style="height:6px;margin-bottom:1rem">
-      <div class="progress-fill" id="gen-fill" style="width:0%"></div>
-    </div>
-    <div class="log-box" id="log-box">
-      <span class="info">Esperando...</span>
-    </div>
-  </div>
-</div>
-
 <!-- TAB: TITULARES -->
 <div class="panel" id="tab-titulares">
 
@@ -278,7 +274,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-danger" onclick="borrarTodosClips()">🗑 Borrar todos los clips</button>
     </div>
     <div class="preview-grid" id="clips-grid">
-      <div style="color:var(--muted);font-size:14px;padding:1rem">Aún no hay clips. Genera primero desde la pestaña ⚙️.</div>
+      <div style="color:var(--muted);font-size:14px;padding:1rem">Aún no hay clips. Genéralos desde la pestaña 📋 Pauta.</div>
     </div>
   </div>
 </div>
@@ -337,7 +333,7 @@ function scheduleAutoSave() {
 }
 
 function showTab(id) {
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','editor','generar','clips','titulares'][i]===id));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','editor','clips','titulares'][i]===id));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(id==='clips') cargarClips();
