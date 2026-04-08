@@ -376,7 +376,6 @@ def iniciar_generacion(titular: str, imagen_filename: str, numero: str) -> bool:
 def _run_generar(titular: str, imagen_filename: str, numero: str) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
     try:
-        num = re.sub(r"[^\d]", "", str(numero)).zfill(2) or "01"
         nombre = _safe_name(titular[:50].upper()) or "TITULAR"
 
         _estado["log"].append("→ Preparando imagen con titular...")
@@ -386,8 +385,8 @@ def _run_generar(titular: str, imagen_filename: str, numero: str) -> None:
         if not foto_path.exists():
             raise FileNotFoundError("Imagen preparada no encontrada")
 
-        salida = OUTPUT / f"{num} {nombre}.mp4"
-        _estado["log"].append(f"→ [{num}] {nombre} — generando clip...")
+        salida = OUTPUT / f"01 TIT {nombre}.mp4"
+        _estado["log"].append(f"→ [01 TIT] {nombre} — generando clip...")
 
         bg = (
             ffmpeg
@@ -441,7 +440,7 @@ def _run_generar(titular: str, imagen_filename: str, numero: str) -> None:
             )
 
         _estado["done"] += 1
-        _estado["log"].append(f"✓ {num} {nombre}.mp4")
+        _estado["log"].append(f"✓ 01 TIT {nombre}.mp4")
 
     except Exception as e:
         _estado["errors"] += 1

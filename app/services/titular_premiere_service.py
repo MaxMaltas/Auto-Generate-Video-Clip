@@ -804,11 +804,10 @@ def _generar_clip_item(
     _estado["log"].append("→ Renderizando texto...")
     text_png, first_line_y = _render_text_png(titular, config, font_size, letter_spacing)
 
-    num = re.sub(r"[^\d]", "", str(numero)).zfill(2) or "01"
     nombre = _safe_name(titular[:50].upper()) or "TITULAR"
-    salida = OUTPUT / f"{num} {nombre}.mp4"
+    salida = OUTPUT / f"01 TIT {nombre}.mp4"
 
-    _estado["log"].append(f"→ [{num}] Construyendo pipeline FFmpeg...")
+    _estado["log"].append(f"→ [01 TIT] Construyendo pipeline FFmpeg...")
     cmd = _build_ffmpeg_cmd(
         foto_path, text_png, config, assets, salida,
         first_line_y, color_brightness,
@@ -821,7 +820,7 @@ def _generar_clip_item(
         err_tail = (result.stderr or "")[-300:].strip()
         raise RuntimeError(err_tail or "FFmpeg devolvió código de error")
 
-    return f"{num} {nombre}.mp4"
+    return f"01 TIT {nombre}.mp4"
 
 
 def _run_generar(
