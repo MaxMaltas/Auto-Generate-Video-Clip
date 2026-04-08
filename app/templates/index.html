@@ -928,7 +928,7 @@ function tRemove(id) {
 }
 
 function tAddEmpty() {
-  tLista.push({
+  tLista.unshift({
     id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
     logo_file: null, font_size: null, letter_spacing: -2, color_brightness: 1.0, preview: null,
   });
