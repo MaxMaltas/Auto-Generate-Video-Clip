@@ -4,6 +4,7 @@ import ipaddress
 import socket
 import requests
 import ffmpeg
+from typing import Any
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
@@ -33,7 +34,7 @@ HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate",
     "Connection": "keep-alive",
 }
 
@@ -73,15 +74,73 @@ def _validate_public_http_url(raw_url: str) -> str:
 
 # ── EXTRACTION ────────────────────────────────────────────────────────────────
 
-def extraer_de_url(url: str) -> dict:
-    url = _validate_public_http_url(url)
-    resp = requests.get(url, headers=HEADERS, timeout=15, allow_redirects=True)
+def extraer_de_url(url: str) -> dict[str, Any]:
+    """
+    Intenta extraer titular e imagen probando cada estrategia en orden.
+    Pasa a la siguiente si la anterior falla o no devuelve titular.
+    """
+    orden = [
+        ("headers_h1", _estrategia_headers_h1),
+        ("og_tags", _estrategia_og_tags),
+        ("backend_proxy", _estrategia_backend_proxy),
+    ]
+
+    for key, fn in orden:
+        try:
+            data = fn(url)
+            if (data.get("titular") or "").strip():
+                return {
+                    "titular": data["titular"],
+                    "imagen_url": data.get("imagen_url"),
+                    "strategy": key,
+                }
+        except Exception:
+            continue
+
+    return {"titular": None, "imagen_url": None, "strategy": None}
+
+
+def _fetch_soup(url: str, headers: dict[str, str] | None = None, timeout: int = 15):
+    req_headers = dict(HEADERS)
+    if headers:
+        req_headers.update(headers)
+    resp = requests.get(url, headers=req_headers, timeout=timeout, allow_redirects=True)
     resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
+    return BeautifulSoup(resp.content, "html.parser")
+
+
+def _estrategia_headers_h1(url: str) -> dict[str, str | None]:
+    soup = _fetch_soup(url)
+    h1 = soup.find("h1")
+    titular = h1.get_text(strip=True) if h1 else None
+    return {
+        "titular": titular,
+        "imagen_url": _extraer_imagen(soup, url),
+    }
+
+
+def _estrategia_og_tags(url: str) -> dict[str, str | None]:
+    soup = _fetch_soup(url)
+    og_title = soup.find("meta", property="og:title")
+    og_image = soup.find("meta", property="og:image")
+    titular = og_title.get("content", "").strip() if og_title else None
+    imagen = og_image.get("content", "").strip() if og_image else None
+    return {
+        "titular": titular or None,
+        "imagen_url": urljoin(url, imagen) if imagen else None,
+    }
+
+
+def _estrategia_backend_proxy(url: str) -> dict[str, str | None]:
+    """
+    Variante server-side explícita para forzar headers de navegador y referer.
+    """
+    soup = _fetch_soup(url, headers={"Referer": url, "Upgrade-Insecure-Requests": "1"})
     return {
         "titular": _extraer_titular(soup),
         "imagen_url": _extraer_imagen(soup, url),
     }
+
 
 
 def _extraer_titular(soup) -> str | None:
