@@ -32,63 +32,36 @@ HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate",
     "Connection": "keep-alive",
-}
-
-ESTRATEGIAS_EXTRACCION_DEFAULT = {
-    "headers_h1": True,
-    "og_tags": True,
-    "backend_proxy": True,
-    "playwright": False,
 }
 
 # ── EXTRACTION ────────────────────────────────────────────────────────────────
 
-def extraer_de_url(url: str, estrategias: dict[str, bool] | None = None) -> dict[str, Any]:
+def extraer_de_url(url: str) -> dict[str, Any]:
     """
-    Ejecuta estrategias independientes de extracción en orden fijo.
-    Devuelve la primera estrategia que consiga titular (y opcionalmente imagen).
+    Intenta extraer titular e imagen probando cada estrategia en orden.
+    Pasa a la siguiente si la anterior falla o no devuelve titular.
     """
-    cfg = dict(ESTRATEGIAS_EXTRACCION_DEFAULT)
-    if isinstance(estrategias, dict):
-        for key in cfg.keys():
-            if key in estrategias:
-                cfg[key] = bool(estrategias[key])
-
     orden = [
         ("headers_h1", _estrategia_headers_h1),
         ("og_tags", _estrategia_og_tags),
         ("backend_proxy", _estrategia_backend_proxy),
-        ("playwright", _estrategia_playwright),
     ]
 
-    attempts: list[dict[str, Any]] = []
     for key, fn in orden:
-        if not cfg.get(key):
-            attempts.append({"strategy": key, "enabled": False, "ok": False, "skipped": True})
-            continue
         try:
             data = fn(url)
-            ok = bool((data.get("titular") or "").strip())
-            attempts.append({
-                "strategy": key,
-                "enabled": True,
-                "ok": ok,
-                "titular": data.get("titular"),
-                "imagen_url": data.get("imagen_url"),
-            })
-            if ok:
+            if (data.get("titular") or "").strip():
                 return {
-                    "titular": data.get("titular"),
+                    "titular": data["titular"],
                     "imagen_url": data.get("imagen_url"),
                     "strategy": key,
-                    "attempts": attempts,
                 }
-        except Exception as e:
-            attempts.append({"strategy": key, "enabled": True, "ok": False, "error": str(e)[:200]})
+        except Exception:
+            continue
 
-    return {"titular": None, "imagen_url": None, "strategy": None, "attempts": attempts}
+    return {"titular": None, "imagen_url": None, "strategy": None}
 
 
 def _fetch_soup(url: str, headers: dict[str, str] | None = None, timeout: int = 15):
@@ -97,7 +70,7 @@ def _fetch_soup(url: str, headers: dict[str, str] | None = None, timeout: int = 
         req_headers.update(headers)
     resp = requests.get(url, headers=req_headers, timeout=timeout, allow_redirects=True)
     resp.raise_for_status()
-    return BeautifulSoup(resp.text, "html.parser")
+    return BeautifulSoup(resp.content, "html.parser")
 
 
 def _estrategia_headers_h1(url: str) -> dict[str, str | None]:
@@ -132,25 +105,6 @@ def _estrategia_backend_proxy(url: str) -> dict[str, str | None]:
         "imagen_url": _extraer_imagen(soup, url),
     }
 
-
-def _estrategia_playwright(url: str) -> dict[str, str | None]:
-    try:
-        from playwright.sync_api import sync_playwright
-    except Exception as e:
-        raise RuntimeError(f"Playwright no disponible: {e}")
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        html = page.content()
-        browser.close()
-
-    soup = BeautifulSoup(html, "html.parser")
-    return {
-        "titular": _extraer_titular(soup),
-        "imagen_url": _extraer_imagen(soup, url),
-    }
 
 
 def _extraer_titular(soup) -> str | None:

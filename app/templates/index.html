@@ -62,10 +62,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 #sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;transition:background .3s}
 #sync-dot.syncing{background:var(--yellow);animation:pulse 0.6s infinite}
 #sync-dot.remote{background:var(--accent);animation:pulse 0.8s infinite}
-.switch-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem;margin-top:.75rem}
-.switch-item{display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.5rem .65rem}
-.switch-item label{font-size:12px;color:var(--text);cursor:pointer}
-.switch-item input{width:auto;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -246,24 +243,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <input type="url" id="t-url" placeholder="https://www.elpais.com/noticia/..." class="flex-1">
       <button class="btn btn-primary" id="btn-t-extraer" onclick="titularesExtraer()">Extraer y añadir</button>
     </div>
-    <div class="switch-list">
-      <div class="switch-item">
-        <input type="checkbox" id="sw-headers-h1" checked>
-        <label for="sw-headers-h1">Solución 1 · Headers + H1</label>
-      </div>
-      <div class="switch-item">
-        <input type="checkbox" id="sw-og-tags" checked>
-        <label for="sw-og-tags">Solución 2 · OpenGraph</label>
-      </div>
-      <div class="switch-item">
-        <input type="checkbox" id="sw-backend-proxy" checked>
-        <label for="sw-backend-proxy">Solución 3 · Backend proxy</label>
-      </div>
-      <div class="switch-item">
-        <input type="checkbox" id="sw-playwright">
-        <label for="sw-playwright">Solución 4 · Playwright</label>
-      </div>
-    </div>
+
   </div>
 
   <!-- Lista de titulares -->
@@ -953,17 +933,6 @@ async function tUploadImage(id, input) {
 async function titularesExtraer() {
   const url = document.getElementById('t-url').value.trim();
   if (!url) { showToast('Introduce una URL', true); return; }
-  const estrategias = {
-    headers_h1: document.getElementById('sw-headers-h1').checked,
-    og_tags: document.getElementById('sw-og-tags').checked,
-    backend_proxy: document.getElementById('sw-backend-proxy').checked,
-    playwright: document.getElementById('sw-playwright').checked,
-  };
-  if (!Object.values(estrategias).some(Boolean)) {
-    showToast('Activa al menos una solución de extracción', true);
-    return;
-  }
-
   const btn = document.getElementById('btn-t-extraer');
   btn.disabled = true;
   btn.textContent = 'Extrayendo...';
@@ -972,7 +941,7 @@ async function titularesExtraer() {
     const r = await fetch('/titulares/extraer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, estrategias }),
+      body: JSON.stringify({ url }),
     });
     const d = await r.json();
     if (!d.ok) { showToast('Error: ' + d.error, true); return; }

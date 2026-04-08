@@ -19,11 +19,10 @@ titular_bp = Blueprint("titular", __name__)
 def extraer():
     data = request.get_json(force=True)
     url = (data.get("url") or "").strip()
-    estrategias = data.get("estrategias") or {}
     if not url:
         return jsonify({"ok": False, "error": "URL requerida"})
     try:
-        result = extraer_de_url(url, estrategias)
+        result = extraer_de_url(url)
         if not result["titular"]:
             return jsonify({"ok": False, "error": "No se pudo extraer el titular"})
         imagen_filename = None
@@ -35,7 +34,6 @@ def extraer():
             "titular": result["titular"],
             "imagen_url": result["imagen_url"],
             "strategy": result.get("strategy"),
-            "attempts": result.get("attempts", []),
             "imagen": imagen_filename,
             "logo_file": logo_file,
         })
