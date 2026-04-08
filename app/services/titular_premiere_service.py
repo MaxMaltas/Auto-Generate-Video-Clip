@@ -102,10 +102,10 @@ LOGO_TEXT_GAP = -40
 
 SECTION_CONFIGS: dict[str, dict] = {
     "BOLETINES": {
-        "zoom_start":    1.97, "zoom_end":    2.31,
-        "center_x":      0.18, "center_y":    0.195,
-        "color_opacity": 1.00,
-        "text_y_ratio":  0.2818,
+        "zoom_start":    1.61, "zoom_end":    2.11,
+        "center_x":      0.019, "center_y":  0.0,
+        "color_opacity": 0.50,
+        "text_y_ratio":  0.62,
     },
     "SUCESOS": {
         "zoom_start":    1.61, "zoom_end":    2.11,
@@ -114,22 +114,22 @@ SECTION_CONFIGS: dict[str, dict] = {
         "text_y_ratio":  0.62,
     },
     "PROTAS": {
-        "zoom_start":    1.61, "zoom_end":    1.92,
-        "center_x":      0.0,  "center_y":   0.0,
-        "color_opacity": 0.92,
-        "text_y_ratio":  0.2272,
+        "zoom_start":    1.61, "zoom_end":    2.11,
+        "center_x":      0.019, "center_y":  0.0,
+        "color_opacity": 0.50,
+        "text_y_ratio":  0.62,
     },
     "INFO": {
         "zoom_start":    1.61, "zoom_end":    2.11,
-        "center_x":      0.0,  "center_y":   0.0,
-        "color_opacity": 0.88,
-        "text_y_ratio":  0.2272,
+        "center_x":      0.019, "center_y":  0.0,
+        "color_opacity": 0.50,
+        "text_y_ratio":  0.62,
     },
     "DEPORTES": {
-        "zoom_start":    3.42, "zoom_end":    3.98,
-        "center_x":      0.0,  "center_y":   0.181,
-        "color_opacity": 0.88,
-        "text_y_ratio":  0.2272,
+        "zoom_start":    1.61, "zoom_end":    2.11,
+        "center_x":      0.019, "center_y":  0.0,
+        "color_opacity": 0.50,
+        "text_y_ratio":  0.62,
     },
 }
 
