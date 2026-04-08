@@ -743,6 +743,11 @@ let tLista = [];
 let tNextId = 1;
 let tLogos  = [];   // loaded once from server
 
+function tAddToTop(item) {
+  // Inserta siempre los nuevos titulares al inicio de la pila (posición 0)
+  tLista.unshift(item);
+}
+
 async function tCargarLogos() {
   if (tLogos.length) return;
   try {
@@ -894,7 +899,7 @@ function tRemove(id) {
 }
 
 function tAddEmpty() {
-  tLista.push({
+  tAddToTop({
     id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
     logo_file: null, font_size: null, letter_spacing: -2, color_brightness: 1.0, preview: null,
   });
@@ -945,7 +950,7 @@ async function titularesExtraer() {
     const d = await r.json();
     if (!d.ok) { showToast('Error: ' + d.error, true); return; }
 
-    tLista.push({
+    tAddToTop({
       id: tNextId++,
       titular: d.titular || '',
       imagen: d.imagen || '',
