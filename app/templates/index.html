@@ -738,6 +738,10 @@ async function procesarFoto() {
 let tLista = [];
 let tNextId = 1;
 let tLogos  = [];   // loaded once from server
+const tAutoPreviewDelayMs = 350;
+const tPreviewTimers = new Map();      // id -> timeout
+const tPreviewInFlight = new Set();    // ids con petición activa
+const tPreviewPending = new Set();     // ids con cambios durante petición activa
 
 async function tCargarLogos() {
   if (tLogos.length) return;
@@ -857,9 +861,40 @@ function tRender() {
   `).join('');
 }
 
+function tCanPreview(item) {
+  return !!((item?.titular || '').trim() && (item?.imagen || '').trim());
+}
+
+function tSchedulePreview(id, delay = tAutoPreviewDelayMs) {
+  const item = tLista.find(i => i.id === id);
+  if (!item || !tCanPreview(item)) return;
+
+  if (tPreviewTimers.has(id)) clearTimeout(tPreviewTimers.get(id));
+  const timer = setTimeout(async () => {
+    tPreviewTimers.delete(id);
+
+    if (tPreviewInFlight.has(id)) {
+      tPreviewPending.add(id);
+      return;
+    }
+
+    await tPreview(id, { auto: true, silent: true });
+
+    if (tPreviewPending.has(id)) {
+      tPreviewPending.delete(id);
+      tSchedulePreview(id, 120);
+    }
+  }, delay);
+  tPreviewTimers.set(id, timer);
+}
+
 function tUpdate(id, key, value) {
   const item = tLista.find(i=>i.id===id);
-  if (item) { item[key] = value; item.preview = null; }
+  if (item) {
+    item[key] = value;
+    item.preview = null;
+    tSchedulePreview(id);
+  }
 }
 
 async function tLogoChange(id, logoFile) {
@@ -882,6 +917,7 @@ async function tLogoChange(id, logoFile) {
     } catch(e) { /* silencioso */ }
   }
   tRender();
+  tSchedulePreview(id, 120);
 }
 
 function tRemove(id) {
@@ -916,6 +952,7 @@ async function tUploadImage(id, input) {
     item.imagen = d.filename || file.name.replace(/^.*[\\/]/, '');
     item.preview = null;
     tRender();
+    tSchedulePreview(id, 120);
     showToast('Imagen añadida al titular');
   } catch (e) {
     showToast('Error de conexión al subir la imagen', true);
@@ -963,11 +1000,19 @@ async function titularesExtraer() {
   }
 }
 
-async function tPreview(id) {
+async function tPreview(id, opts = {}) {
+  const { auto = false, silent = false } = opts;
   const item = tLista.find(i=>i.id===id);
   if (!item) return;
-  const btn = document.querySelector(`#t-item-${id} .btn-ghost`);
-  if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
+  if (!tCanPreview(item)) {
+    if (!silent && !(item.titular || '').trim()) showToast('El titular está vacío', true);
+    if (!silent && !(item.imagen || '').trim())  showToast('No hay imagen en este titular', true);
+    return;
+  }
+
+  const btn = document.querySelector(`#t-item-${id} button[onclick="tPreview(${id})"]`);
+  if (!auto && btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
+  tPreviewInFlight.add(id);
   try {
     const r = await fetch('/titulares/preview', {
       method: 'POST',
@@ -988,12 +1033,14 @@ async function tPreview(id) {
       item.preview = d.preview;
       tRender();
     } else {
-      showToast('Error preview: ' + d.error, true);
-      if (btn) { btn.disabled = false; btn.textContent = '👁 Preview texto'; }
+      if (!silent) showToast('Error preview: ' + d.error, true);
+      if (!auto && btn) { btn.disabled = false; btn.textContent = '👁 Preview'; }
     }
   } catch(e) {
-    showToast('Error de conexión', true);
-    if (btn) { btn.disabled = false; btn.textContent = '👁 Preview texto'; }
+    if (!silent) showToast('Error de conexión', true);
+    if (!auto && btn) { btn.disabled = false; btn.textContent = '👁 Preview'; }
+  } finally {
+    tPreviewInFlight.delete(id);
   }
 }
 
