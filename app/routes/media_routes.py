@@ -71,20 +71,35 @@ def pauta_docx():
 
 @media_bp.route("/procesar_foto", methods=["POST"])
 def procesar_foto_route():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return jsonify({"ok": False, "msg": "JSON inválido"}), 400
+    if "foto" not in data:
+        return jsonify({"ok": False, "msg": "Campo 'foto' requerido"}), 400
+
+    try:
+        x_pct = float(data.get("x", 50))
+        y_pct = float(data.get("y", 50))
+        scale = float(data.get("scale", 1.0))
+        borde = int(data.get("borde", 15))
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "msg": "Parámetros numéricos inválidos"}), 400
+
     result = procesar_foto(
         nombre = data["foto"],
-        x_pct  = float(data.get("x", 50)),
-        y_pct  = float(data.get("y", 50)),
-        scale  = float(data.get("scale", 1.0)),
-        borde  = int(data.get("borde", 15))
+        x_pct  = x_pct,
+        y_pct  = y_pct,
+        scale  = scale,
+        borde  = borde
     )
     return jsonify(result)
 
 
 @media_bp.route("/procesar_todas", methods=["POST"])
 def procesar_todas_route():
-    items = request.get_json()
+    items = request.get_json(silent=True)
+    if not isinstance(items, list):
+        return jsonify({"ok": False, "msg": "Se esperaba una lista JSON"}), 400
     resultados = procesar_lote(items)
     ok = sum(1 for r in resultados if r.get("ok"))
     return jsonify({"ok": True, "resultados": resultados, "total": ok})
