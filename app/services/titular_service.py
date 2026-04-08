@@ -1,9 +1,11 @@
 import re
 import threading
+import ipaddress
+import socket
 import requests
 import ffmpeg
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 
@@ -35,9 +37,44 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 
+MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024  # 15 MB
+
+
+def _is_private_host(hostname: str) -> bool:
+    """Best-effort private/loopback/link-local detection to reduce SSRF risk."""
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        return True
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_multicast
+            or ip.is_unspecified
+            or ip.is_reserved
+        ):
+            return True
+    return False
+
+
+def _validate_public_http_url(raw_url: str) -> str:
+    parsed = urlparse((raw_url or "").strip())
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError("La URL debe usar http o https")
+    if not parsed.netloc:
+        raise ValueError("URL inválida")
+    hostname = parsed.hostname or ""
+    if _is_private_host(hostname):
+        raise ValueError("No se permiten URLs internas o privadas")
+    return parsed.geturl()
+
 # ── EXTRACTION ────────────────────────────────────────────────────────────────
 
 def extraer_de_url(url: str) -> dict:
+    url = _validate_public_http_url(url)
     resp = requests.get(url, headers=HEADERS, timeout=15, allow_redirects=True)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -90,6 +127,7 @@ def _extraer_imagen(soup, base_url: str) -> str | None:
 
 def descargar_imagen(imagen_url: str) -> str:
     """Download image to TITULAR_TEMP. Returns the saved filename."""
+    imagen_url = _validate_public_http_url(imagen_url)
     TITULAR_TEMP.mkdir(parents=True, exist_ok=True)
     path_part = imagen_url.split("?")[0].rstrip("/")
     ext = Path(path_part).suffix.lower()
@@ -101,8 +139,18 @@ def descargar_imagen(imagen_url: str) -> str:
     dest = TITULAR_TEMP / filename
     r = requests.get(imagen_url, headers=HEADERS, timeout=20, stream=True)
     r.raise_for_status()
+    content_type = (r.headers.get("Content-Type") or "").lower()
+    if content_type and not content_type.startswith("image/"):
+        raise ValueError("La URL no apunta a una imagen")
+
+    total = 0
     with open(dest, "wb") as f:
         for chunk in r.iter_content(8192):
+            total += len(chunk)
+            if total > MAX_DOWNLOAD_BYTES:
+                f.close()
+                dest.unlink(missing_ok=True)
+                raise ValueError("La imagen excede el tamaño máximo permitido (15 MB)")
             f.write(chunk)
     return filename
 
