@@ -33,6 +33,7 @@ def extraer():
             "ok": True,
             "titular": result["titular"],
             "imagen_url": result["imagen_url"],
+            "strategy": result.get("strategy"),
             "imagen": imagen_filename,
             "logo_file": logo_file,
         })

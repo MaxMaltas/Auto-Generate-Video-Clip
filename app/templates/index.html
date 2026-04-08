@@ -62,6 +62,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 #sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;transition:background .3s}
 #sync-dot.syncing{background:var(--yellow);animation:pulse 0.6s infinite}
 #sync-dot.remote{background:var(--accent);animation:pulse 0.8s infinite}
+
 </style>
 </head>
 <body>
@@ -238,6 +239,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <input type="url" id="t-url" placeholder="https://www.elpais.com/noticia/..." class="flex-1">
       <button class="btn btn-primary" id="btn-t-extraer" onclick="titularesExtraer()">Extraer y añadir</button>
     </div>
+
   </div>
 
   <!-- Lista de titulares -->
@@ -970,7 +972,6 @@ async function tUploadImage(id, input) {
 async function titularesExtraer() {
   const url = document.getElementById('t-url').value.trim();
   if (!url) { showToast('Introduce una URL', true); return; }
-
   const btn = document.getElementById('btn-t-extraer');
   btn.disabled = true;
   btn.textContent = 'Extrayendo...';
@@ -998,7 +999,8 @@ async function titularesExtraer() {
       preview: null,
     });
     tRender();
-    showToast('Titular añadido ✓');
+    const metodo = d.strategy ? ` [${d.strategy}]` : '';
+    showToast(`Titular añadido ✓${metodo}`);
   } catch (e) {
     showToast('Error de conexión', true);
   } finally {
