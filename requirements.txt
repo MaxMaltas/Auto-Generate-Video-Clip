@@ -2,3 +2,4 @@ flask
 ffmpeg-python
 python-docx
 pillow
+beautifulsoup4

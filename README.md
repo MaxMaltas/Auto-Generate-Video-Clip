@@ -1,292 +1,205 @@
 # 🎬 ProductoraClips
 
-Herramienta interna para la automatización de clips audiovisuales a partir de imágenes y una pauta editable.
+Aplicación interna para redacción audiovisual que automatiza la creación de clips a partir de imágenes, pauta y titulares de noticias.
 
-Permite a un equipo de redacción subir fotos, definir una pauta y generar automáticamente clips listos para emisión.
+Incluye dos flujos principales:
 
----
-
-# 🚀 Funcionalidades
-
-* 📁 Subida de imágenes desde navegador
-* 📋 Creación de pauta editable (número, nombre, texto opcional, foto)
-* ⚙️ Generación automática de clips con FFmpeg
-* 🎬 Previsualización y descarga de clips
-* 📦 Descarga masiva en ZIP
-* 📝 Exportación de pauta en formato Word (.docx)
-* 🌐 Acceso desde red local (LAN)
+1. **Pauta clásica**: subida de fotos, edición, generación y exportación de clips.
+2. **Titulares estilo Premiere**: extracción desde URL, selección de sección/logo y generación individual o masiva.
 
 ---
 
-# 🧠 Cómo funciona
+## 🚀 Funcionalidades actuales
 
-El flujo de trabajo es:
+### 📋 Flujo de pauta (clips clásicos)
 
-1. Subir imágenes
-2. Crear pauta del día
-3. Generar clips automáticamente
-4. Descargar o revisar resultados
+- Subida de imágenes desde navegador (drag & drop).
+- Pauta editable con campos: número, nombre, texto y foto.
+- Sincronización de pauta entre clientes mediante `mtime` (útil en LAN con varios redactores).
+- Guardado manual y autosave.
+- Exportación de pauta a **Word (.docx)**.
+- Generación automática de clips con FFmpeg.
+- Monitor de estado/progreso.
+- Previsualización de clips generados.
+- Descarga individual y descarga masiva en ZIP.
+- Borrado masivo de fotos y clips.
 
-Internamente:
+### 🖼️ Editor de fotos
 
-* Backend: Python + Flask
-* Procesado: FFmpeg
-* Frontend: HTML + JS (vanilla)
-* Exportación Word: python-docx
+- Vista previa en canvas 1920x1080.
+- Ajuste de escala, posición X/Y y grosor de borde.
+- Acciones rápidas: centrar, fill, fit.
+- Procesado individual o por lote.
+- Salida de fotos editadas en `input/fotos/*_editada.png`.
+
+### 🗞️ Módulo de titulares
+
+- Extracción automática de titular e imagen desde URL (metadatos OG/Twitter + fallback HTML).
+- Descarga automática de imagen de noticia.
+- Generación de titular simple (fondo + caja de texto + branding base).
+- **Generación estilo Premiere** con composición multicapa (foto, degradado, animación de sección, color, texto, logo).
+- Configuración por secciones (`BOLETINES`, `SUCESOS`, `PROTAS`, `INFO`, `DEPORTES`).
+- Soporte de ajustes de tipografía: tamaño, espaciado y brillo de color.
+- Detección automática de logo por dominio de la URL.
+- Gestión de mapeos manuales dominio → logo.
+- Gestión de lista de titulares con generación masiva (`generar-premiere-todos`) y previews.
+
+### 🌐 Operación en red local
+
+- La app se levanta en `0.0.0.0:8080`.
+- Se muestran URLs local y de red para compartir con redacción.
 
 ---
 
-# 📦 Estructura del proyecto
+## 🧱 Stack técnico
 
-```
-productoraclips/
+- **Backend**: Python + Flask.
+- **Render/Procesado**: FFmpeg (`ffmpeg-python` + llamadas a binario FFmpeg).
+- **Imágenes/Títulos**: Pillow.
+- **Extracción web de titulares**: `requests` + `beautifulsoup4`.
+- **Exportación Word**: `python-docx`.
+- **Frontend**: HTML + CSS + JavaScript vanilla (UI en pestañas).
+
+---
+
+## 📁 Estructura del proyecto
+
+```text
+.
 ├── run.py
+├── requirements.txt
 ├── app/
-│   ├── routes/
-│   ├── services/
+│   ├── __init__.py
 │   ├── core/
+│   │   ├── config.py
+│   │   └── state.py
+│   ├── routes/
+│   │   ├── main_routes.py
+│   │   ├── media_routes.py
+│   │   ├── process_routes.py
+│   │   └── titular_routes.py
+│   ├── services/
+│   │   ├── clip_service.py
+│   │   ├── doc_service.py
+│   │   ├── file_service.py
+│   │   ├── info_services.py
+│   │   ├── pauta_service.py
+│   │   ├── photo_service.py
+│   │   ├── titular_service.py
+│   │   └── titular_premiere_service.py
 │   └── templates/
+│       └── index.html
 ├── assets/
+│   ├── MEDIOS/
+│   ├── logo_mappings.json
+│   └── ...
 ├── input/fotos/
 ├── output/
-└── temp/
+├── temp/
+└── pauta.json
 ```
 
 ---
 
-# ⚙️ Requisitos
+## ⚙️ Requisitos
 
-## Software necesario
+### Sistema
 
-* Python 3.10 o superior
-* FFmpeg instalado en el sistema
+- Python **3.10+**.
+- FFmpeg instalado y accesible por PATH.
 
----
+### Dependencias Python
 
-# 🪟 Instalación en Windows
-
-## 1. Instalar Python
-
-Descargar desde:
-https://www.python.org/downloads/
-
-⚠️ IMPORTANTE: marcar
-✔️ "Add Python to PATH"
-
----
-
-## 2. Instalar FFmpeg
-
-1. Descargar desde:
-   https://ffmpeg.org/download.html
-
-2. Descomprimir
-
-3. Añadir la carpeta `bin` al PATH:
-
-Ejemplo:
-
-```
-C:\ffmpeg\bin
-```
-
----
-
-## 3. Clonar el proyecto
+Instalación base:
 
 ```bash
-git clone https://github.com/TU_USUARIO/productoraclips.git
-cd productoraclips
+pip install -r requirements.txt
 ```
+
+Para el módulo de titulares (extracción por URL), asegúrate de tener también:
+
+> Nota: `requirements.txt` actual contiene `flask`, `ffmpeg-python`, `python-docx`, `beautifulsoup4` y `pillow`.
 
 ---
 
-## 4. Crear entorno virtual
+## 🪟 Instalación rápida en Windows
+
+1. Instala Python desde https://www.python.org/downloads/ y marca **“Add Python to PATH”**.
+2. Instala FFmpeg desde https://ffmpeg.org/download.html y añade `...\ffmpeg\bin` al PATH.
+3. Clona y entra al proyecto:
+
+```bash
+git clone <TU_REPO>
+cd Auto-Generate-Video-Clip
+```
+
+4. Crea y activa entorno virtual:
 
 ```bash
 python -m venv venv
-venv\Scripts\activate.bat
+venv\Scripts\activate
 ```
 
----
-
-## 5. Instalar dependencias
+5. Instala dependencias:
 
 ```bash
-pip install flask ffmpeg-python python-docx pillow requests beautifulsoup4
+pip install -r requirements.txt
 ```
 
----
-
-## 6. Ejecutar
+6. Ejecuta:
 
 ```bash
 python run.py
 ```
 
-Abrir en navegador:
-
-```
-http://localhost:8080
-```
-
 ---
 
-# 🍎 Instalación en macOS
-
-## 1. Instalar Homebrew (si no lo tienes)
+## 🍎 Instalación rápida en macOS
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
----
-
-## 2. Instalar FFmpeg
-
-```bash
-brew install ffmpeg
-```
-
----
-
-## 3. Instalar Python
-
-```bash
-brew install python
-```
-
----
-
-## 4. Clonar proyecto
-
-```bash
-git clone https://github.com/TU_USUARIO/productoraclips.git
-cd productoraclips
-```
-
----
-
-## 5. Entorno virtual
-
-```bash
+brew install python ffmpeg
+git clone <TU_REPO>
+cd Auto-Generate-Video-Clip
 python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
+python run.py
 ```
 
 ---
 
-## 6. Dependencias
+## ▶️ Ejecución
 
-```bash
-pip install flask ffmpeg-python python-docx pillow requests beautifulsoup4
-```
-
----
-
-## 7. Ejecutar
+Lanza:
 
 ```bash
 python run.py
 ```
 
-Abrir:
+Accesos habituales:
 
-```
-http://localhost:8080
-```
+- Local: `http://localhost:8080`
+- LAN: `http://IP_DEL_EQUIPO:8080`
 
----
-
-# 🌐 Acceso en red local
-
-La app también es accesible desde otros dispositivos en la misma red:
-
-```
-http://IP_DEL_EQUIPO:8080
-```
-
-Ejemplo:
-
-```
-http://192.168.1.35:8080
-```
+El script imprime automáticamente la IP local detectada para compartirla con redacción.
 
 ---
 
-# 📁 Carpetas importantes
+## 📌 Carpetas y archivos clave
 
-* `assets/` → vídeos base y logo
-* `input/fotos/` → imágenes subidas
-* `output/` → clips generados
-* `temp/` → archivos temporales
-* `pauta.json` → datos de la pauta
-
----
-
-# 📝 Formato de pauta
-
-Cada entrada tiene:
-
-```
-01 - NOMBRE - Texto opcional
-```
-
-Ejemplo:
-
-```
-01 - MANUEL
-02 - JESUS - Cumple 44 años
-```
+- `assets/`: vídeos/overlays/logos base.
+- `assets/MEDIOS/`: logos de medios para titulares.
+- `assets/logo_mappings.json`: mapeos manuales dominio → logo.
+- `input/fotos/`: fotos originales y editadas.
+- `output/`: clips MP4 finales.
+- `temp/`: temporales de generación y previews.
+- `pauta.json`: estado persistido de la pauta.
 
 ---
 
-# 🎬 Generación de clips
+## ✅ Recomendaciones operativas
 
-Cada clip se genera con:
-
-* Fondo de vídeo
-* Imagen con zoom dinámico
-* Overlay de logo
-* Duración fija (10s)
-* Resolución Full HD (1920x1080)
-
----
-
-# 🧩 Dependencias Python
-
-* Flask → servidor web
-* ffmpeg-python → wrapper de FFmpeg
-* python-docx → generación de documentos Word
-
----
-
-# ⚠️ Notas importantes
-
-* FFmpeg debe estar correctamente instalado y accesible en PATH
-* No es un servidor de producción (uso interno / local)
-* No incluye autenticación (entorno controlado)
-
----
-
-# 🧱 Futuras mejoras
-
-* Integración con WhatsApp / formularios
-* Autogeneración de pauta
-* Base de datos (SQLite)
-* Sistema de plantillas
-* Paralelización del render
-* Dockerización
-
----
-
-# 👤 Autor
-
-Proyecto desarrollado como herramienta de automatización para producción audiovisual.
-
----
-
-# 📄 Licencia
-
-Uso interno / privado (definir según necesidades)
-
+- Procesa las fotos en la pestaña **Editor** antes de generar clips clásicos.
+- Para titulares, revisa logo detectado por dominio y corrige mapping cuando sea necesario.
+- Si trabajáis varios usuarios en LAN, mantened una única pauta activa para evitar sobreescrituras de contenido.
+- Limpia `output/` periódicamente para evitar acumulación de clips antiguos.
