@@ -168,7 +168,6 @@ cd Auto-Generate-Video-Clip
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install requests beautifulsoup4
 python run.py
 ```
 
@@ -188,52 +187,6 @@ Accesos habituales:
 - LAN: `http://IP_DEL_EQUIPO:8080`
 
 El script imprime automáticamente la IP local detectada para compartirla con redacción.
-
----
-
-## 🔌 Endpoints principales (resumen)
-
-### Base / estado
-
-- `GET /` → UI principal.
-- `GET /info` → IP local.
-- `GET /estado` → estado generación clips clásicos.
-
-### Media / pauta
-
-- `POST /upload`
-- `GET /fotos`
-- `GET /thumb/<nombre>`
-- `GET|POST /pauta`
-- `GET /pauta/mtime`
-- `GET /pauta/docx`
-- `GET /clips`
-- `GET /clip/<nombre>`
-- `GET /zip`
-- `DELETE /fotos/borrar_todas`
-- `DELETE /clips/borrar_todos`
-- `POST /procesar_foto`
-- `POST /procesar_todas`
-
-### Generación clásica
-
-- `POST /generar`
-
-### Titulares
-
-- `POST /titulares/extraer`
-- `POST /titulares/generar`
-- `GET /titulares/estado`
-- `GET /titulares/thumb/<nombre>`
-- `GET /titulares/secciones`
-- `POST /titulares/generar-premiere`
-- `POST /titulares/generar-premiere-todos`
-- `GET /titulares/estado-premiere`
-- `GET|POST /titulares/lista`
-- `POST /titulares/preview`
-- `GET /titulares/pm-thumb/<nombre>`
-- `GET /titulares/logos`
-- `GET|POST /titulares/logo-mapping`
 
 ---
 
