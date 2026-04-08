@@ -740,6 +740,11 @@ async function procesarFoto() {
 let tLista = [];
 let tNextId = 1;
 let tLogos  = [];   // loaded once from server
+
+function tAddToTop(item) {
+  // Inserta siempre los nuevos titulares al inicio de la pila (posición 0)
+  tLista.unshift(item);
+}
 const tAutoPreviewDelayMs = 350;
 const tPreviewTimers = new Map();      // id -> timeout
 const tPreviewInFlight = new Set();    // ids con petición activa
@@ -928,7 +933,8 @@ function tRemove(id) {
 }
 
 function tAddEmpty() {
-  tLista.push({
+  tAddToTop({
+  tLista.unshift({
     id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
     logo_file: null, font_size: null, letter_spacing: -2, color_brightness: 1.0, preview: null,
   });
@@ -954,6 +960,7 @@ async function tUploadImage(id, input) {
     item.imagen = d.filename || file.name.replace(/^.*[\\/]/, '');
     item.preview = null;
     tRender();
+    tSchedulePreview(id, 120);
     showToast('Imagen añadida al titular');
   } catch (e) {
     showToast('Error de conexión al subir la imagen', true);
@@ -978,6 +985,7 @@ async function titularesExtraer() {
     const d = await r.json();
     if (!d.ok) { showToast('Error: ' + d.error, true); return; }
 
+    tAddToTop({
     tLista.unshift({
       id: tNextId++,
       titular: d.titular || '',
