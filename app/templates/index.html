@@ -740,6 +740,11 @@ async function procesarFoto() {
 let tLista = [];
 let tNextId = 1;
 let tLogos  = [];   // loaded once from server
+
+function tAddToTop(item) {
+  // Inserta siempre los nuevos titulares al inicio de la pila (posición 0)
+  tLista.unshift(item);
+}
 const tAutoPreviewDelayMs = 350;
 const tPreviewTimers = new Map();      // id -> timeout
 const tPreviewInFlight = new Set();    // ids con petición activa
@@ -954,6 +959,7 @@ async function tUploadImage(id, input) {
     item.imagen = d.filename || file.name.replace(/^.*[\\/]/, '');
     item.preview = null;
     tRender();
+    tSchedulePreview(id, 120);
     showToast('Imagen añadida al titular');
   } catch (e) {
     showToast('Error de conexión al subir la imagen', true);
