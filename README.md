@@ -118,11 +118,7 @@ pip install -r requirements.txt
 
 Para el módulo de titulares (extracción por URL), asegúrate de tener también:
 
-```bash
-pip install requests beautifulsoup4
-```
-
-> Nota: `requirements.txt` actual contiene `flask`, `ffmpeg-python`, `python-docx` y `pillow`.
+> Nota: `requirements.txt` actual contiene `flask`, `ffmpeg-python`, `python-docx`, `beautifulsoup4` y `pillow`.
 
 ---
 
@@ -148,7 +144,6 @@ venv\Scripts\activate
 
 ```bash
 pip install -r requirements.txt
-pip install requests beautifulsoup4
 ```
 
 6. Ejecuta:
