@@ -116,6 +116,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="width:60px">#</th>
         <th style="width:120px">Nombre</th>
         <th>Texto</th>
+        <th style="width:130px">Tipo</th>
         <th style="width:200px">Foto</th>
         <th style="width:100px">Preview</th>
         <th style="width:50px"></th>
@@ -378,8 +379,11 @@ async function cargarFotos() {
 async function cargarPautaDesdeServidor() {
   const r = await fetch('/pauta');
   const d = await r.json();
-  pautaData = d.data && d.data.length ? d.data : [{numero:'01',nombre:'',texto:'',foto:''}];
-  pautaData.forEach(row => { if (!row.foto) row.foto = autoAsignarFoto(row.numero); });
+  pautaData = d.data && d.data.length ? d.data : [{numero:'01',nombre:'',texto:'',tipo:'FOTO',foto:''}];
+  pautaData.forEach(row => {
+    row.tipo = normalizarTipoPauta(row.tipo);
+    if (!row.foto) row.foto = autoAsignarFoto(row.numero);
+  });
   lastKnownMtime = d.mtime || 0;
   renderPauta();
 }
@@ -395,9 +399,15 @@ function autoAsignarFoto(numero) {
   }) || '';
 }
 
+function normalizarTipoPauta(tipo) {
+  const valor = String(tipo || '').trim().toUpperCase();
+  if (['FOTO', 'CUBRIR', 'TOTAL'].includes(valor)) return valor;
+  return 'FOTO';
+}
+
 function renderPauta() {
   const tbody = document.getElementById('pauta-body');
-  if(!pautaData.length) pautaData = [{numero:'01',nombre:'',texto:'',foto:''}];
+  if(!pautaData.length) pautaData = [{numero:'01',nombre:'',texto:'',tipo:'FOTO',foto:''}];
   tbody.innerHTML = pautaData.map((row,i)=>`
     <tr>
       <td><input value="${esc(row.numero)}" style="width:50px;text-align:center"
@@ -406,6 +416,13 @@ function renderPauta() {
           oninput="pautaData[${i}].nombre=this.value.toUpperCase();this.value=pautaData[${i}].nombre;scheduleAutoSave()"></td>
       <td><input value="${esc(row.texto||'')}" placeholder="Texto opcional"
           oninput="pautaData[${i}].texto=this.value;scheduleAutoSave()"></td>
+      <td>
+        <select onchange="pautaData[${i}].tipo=this.value;scheduleAutoSave()">
+          <option value="FOTO" ${normalizarTipoPauta(row.tipo)==='FOTO'?'selected':''}>FOTO</option>
+          <option value="CUBRIR" ${normalizarTipoPauta(row.tipo)==='CUBRIR'?'selected':''}>CUBRIR</option>
+          <option value="TOTAL" ${normalizarTipoPauta(row.tipo)==='TOTAL'?'selected':''}>TOTAL</option>
+        </select>
+      </td>
       <td>
         <select onchange="pautaData[${i}].foto=this.value;updateThumb(${i},this.value);scheduleAutoSave()">
           <option value="">— selecciona foto —</option>
@@ -439,6 +456,7 @@ function addRow() {
     numero: nextNum,
     nombre: '',
     texto: '',
+    tipo: 'FOTO',
     foto: autoAsignarFoto(nextNum)
   });
   renderPauta();
@@ -447,7 +465,7 @@ function addRow() {
 
 function removeRow(i) {
   pautaData.splice(i,1);
-  if(!pautaData.length) pautaData = [{numero:'01',nombre:'',texto:'',foto:''}];
+  if(!pautaData.length) pautaData = [{numero:'01',nombre:'',texto:'',tipo:'FOTO',foto:''}];
   renderPauta();
   scheduleAutoSave();
 }

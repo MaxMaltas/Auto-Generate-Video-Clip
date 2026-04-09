@@ -21,10 +21,14 @@ def build_pauta_docx():
         numero = str(row.get("numero", "")).strip()
         nombre = str(row.get("nombre", "")).strip().upper()
         texto = str(row.get("texto", "")).strip()
+        tipo = str(row.get("tipo", "FOTO")).strip().upper()
+        if tipo not in {"FOTO", "CUBRIR", "TOTAL"}:
+            tipo = "FOTO"
 
         linea = f"{numero} - {nombre}"
         if texto:
             linea += f" - {texto}"
+        linea += f" - {tipo}"
 
         p = doc.add_paragraph()
         run = p.add_run(linea)
