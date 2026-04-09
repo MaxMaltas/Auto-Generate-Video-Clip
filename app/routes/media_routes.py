@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from flask import Blueprint, request, jsonify, send_from_directory, send_file
 from app.core.config import INPUT, OUTPUT, PAUTA_FILE
 from app.services.file_service import (
@@ -49,8 +51,17 @@ def pauta_mtime():
 def clips():
     return jsonify(list_clips())
 
-@media_bp.route("/clip/<nombre>")
+@media_bp.route("/clip/<nombre>", methods=["GET", "DELETE"])
 def clip(nombre):
+    if request.method == "DELETE":
+        safe_name = Path(nombre).name
+        clip_path = OUTPUT / safe_name
+        if safe_name != nombre or clip_path.suffix.lower() != ".mp4":
+            return jsonify({"ok": False, "msg": "Nombre de clip inválido"}), 400
+        if not clip_path.exists() or not clip_path.is_file():
+            return jsonify({"ok": False, "msg": "Clip no encontrado"}), 404
+        clip_path.unlink()
+        return jsonify({"ok": True, "deleted": safe_name})
     return send_from_directory(OUTPUT, nombre)
 
 @media_bp.route("/zip")
