@@ -3,7 +3,9 @@ from app.core.config import INPUT, OUTPUT, PAUTA_FILE
 from app.services.file_service import (
     save_uploaded_file, list_photos, list_clips, build_clips_zip
 )
-from app.services.pauta_service import load_pauta, save_pauta
+from app.services.pauta_service import (
+    load_pauta, save_pauta, actualizar_foto_en_pauta
+)
 from app.services.doc_service import build_pauta_docx
 from app.services.photo_service import procesar_foto, procesar_lote
 
@@ -92,6 +94,12 @@ def procesar_foto_route():
         scale  = scale,
         borde  = borde
     )
+
+    if result.get("ok") and result.get("resultado"):
+        updated_rows = actualizar_foto_en_pauta(data["foto"], result["resultado"])
+        result["updated_rows"] = updated_rows
+        result["pauta_mtime"] = PAUTA_FILE.stat().st_mtime if PAUTA_FILE.exists() else 0
+
     return jsonify(result)
 
 
@@ -101,8 +109,21 @@ def procesar_todas_route():
     if not isinstance(items, list):
         return jsonify({"ok": False, "msg": "Se esperaba una lista JSON"}), 400
     resultados = procesar_lote(items)
+
+    updated_rows = 0
+    for r in resultados:
+        if r.get("ok") and r.get("resultado"):
+            updated_rows += actualizar_foto_en_pauta(r.get("foto"), r["resultado"])
+
     ok = sum(1 for r in resultados if r.get("ok"))
-    return jsonify({"ok": True, "resultados": resultados, "total": ok})
+    pauta_mtime = PAUTA_FILE.stat().st_mtime if PAUTA_FILE.exists() else 0
+    return jsonify({
+        "ok": True,
+        "resultados": resultados,
+        "total": ok,
+        "updated_rows": updated_rows,
+        "pauta_mtime": pauta_mtime
+    })
 
 @media_bp.route("/fotos/borrar_todas", methods=["DELETE"])
 def borrar_todas_fotos():

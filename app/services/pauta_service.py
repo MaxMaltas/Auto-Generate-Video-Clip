@@ -20,3 +20,27 @@ def get_valid_rows():
         r for r in pauta
         if r.get("numero") and r.get("nombre") and r.get("foto")
     ]
+
+
+def actualizar_foto_en_pauta(foto_original: str, foto_editada: str) -> int:
+    """
+    Reemplaza en pauta.json la foto original por la foto editada en todas
+    las filas donde esté seleccionada.
+
+    Retorna la cantidad de filas actualizadas.
+    """
+    if not foto_original or not foto_editada:
+        return 0
+
+    pauta = load_pauta()
+    updated_rows = 0
+
+    for row in pauta:
+        if row.get("foto") == foto_original:
+            row["foto"] = foto_editada
+            updated_rows += 1
+
+    if updated_rows:
+        save_pauta(pauta)
+
+    return updated_rows

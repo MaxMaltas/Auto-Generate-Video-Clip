@@ -725,8 +725,18 @@ async function procesarFoto() {
 
   if (d.ok) {
     log.innerHTML += `<div class="ok">✓ ${d.resultado} generado</div>`;
-    showToast('Foto procesada: ' + d.resultado);
-    initEditor();
+    showToast(`Foto procesada: ${d.resultado}${d.updated_rows ? ` · ${d.updated_rows} fila(s) actualizada(s)` : ''}`);
+
+    // Si la foto estaba en alguna fila de pauta, traemos cambios del JSON.
+    await cargarFotos();
+    await initEditor();
+
+    // Si cambió el nombre (ej. *_editada.png), mantenemos selección en editor.
+    if (d.resultado && d.resultado !== ed.foto) {
+      const sel = document.getElementById('foto-select');
+      sel.value = d.resultado;
+      cargarFotoEditor(d.resultado);
+    }
   } else {
     log.innerHTML += `<div class="err">✗ ${d.error}</div>`;
     showToast('Error: ' + d.error, true);
@@ -1188,9 +1198,21 @@ async function procesarTodas() {
       : `<div class="err">✗ ${item.foto}: ${item.error}</div>`;
   });
 
-  showToast(`${data.total}/${fotos.length} fotos procesadas`);
+  showToast(`${data.total}/${fotos.length} fotos procesadas${data.updated_rows ? ` · ${data.updated_rows} fila(s) actualizada(s)` : ''}`);
   log.scrollTop = log.scrollHeight;
-  initEditor();
+
+  await cargarFotos();
+  await initEditor();
+
+  // Re-selecciona foto activa si fue renombrada durante el procesamiento.
+  if (ed.foto) {
+    const actual = data.resultados.find(item => item.ok && item.foto === ed.foto);
+    if (actual?.resultado) {
+      const sel = document.getElementById('foto-select');
+      sel.value = actual.resultado;
+      cargarFotoEditor(actual.resultado);
+    }
+  }
 }
 </script>
 </body>
