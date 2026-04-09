@@ -529,6 +529,7 @@ async function cargarClips() {
       </div>
       <div class="actions">
         <a href="/clip/${c}" download class="btn btn-ghost" style="font-size:12px;padding:5px 10px;text-decoration:none">⬇ Descargar</a>
+        <button class="btn btn-danger" style="font-size:12px;padding:5px 10px" onclick="borrarClip('${encodeURIComponent(c)}')">🗑 Eliminar</button>
       </div>
     </div>`).join('');
 }
@@ -558,6 +559,19 @@ async function borrarTodosClips() {
     cargarClips();
   } else {
     showToast('Error al borrar los clips', true);
+  }
+}
+
+async function borrarClip(nombreCodificado) {
+  const nombre = decodeURIComponent(nombreCodificado);
+  if (!confirm(`¿Eliminar el clip "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const r = await fetch(`/clip/${nombreCodificado}`, {method:'DELETE'});
+  const d = await r.json();
+  if (d.ok) {
+    showToast(`Clip eliminado: ${nombre}`);
+    cargarClips();
+  } else {
+    showToast('Error al borrar el clip', true);
   }
 }
 

@@ -25,6 +25,7 @@ _ACTION_MAP = {
     ("GET",    "/clips"):                     "listar_clips",
     ("DELETE", "/clips/borrar_todos"):        "borrar_clips",
     ("GET",    "/clip/"):                     "descargar_clip",
+    ("DELETE", "/clip/"):                     "borrar_clip",
     ("GET",    "/zip"):                       "descargar_zip",
     ("GET",    "/info"):                      "info_ip",
     ("POST",   "/procesar_foto"):             "procesar_foto",
