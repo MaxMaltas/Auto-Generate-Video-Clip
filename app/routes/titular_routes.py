@@ -92,13 +92,15 @@ def generar_premiere():
     letter_spacing   = int(data.get("letter_spacing", -2) or 0)
     color_brightness = float(data.get("color_brightness", 1.0) or 1.0)
     font_size        = int(font_size_raw) if font_size_raw else None
+    logo_width_raw   = data.get("logo_width")
+    logo_width       = int(logo_width_raw) if logo_width_raw else None
 
     if not titular or not imagen:
         return jsonify({"ok": False, "error": "Titular e imagen requeridos"})
 
     started = pm_svc.iniciar_generacion(
         titular, imagen, numero, seccion, logo, source_url,
-        font_size, letter_spacing, color_brightness,
+        font_size, letter_spacing, color_brightness, logo_width,
     )
     if not started:
         return jsonify({"ok": False, "error": "Ya hay una generación en curso"})
