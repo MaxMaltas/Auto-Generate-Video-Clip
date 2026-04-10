@@ -168,6 +168,7 @@ def iniciar_generacion(
     font_size: int | None = None,
     letter_spacing: int = -2,
     color_brightness: float = 1.0,
+    logo_width: int | None = None,
 ) -> bool:
     with _lock:
         if _estado["running"]:
@@ -176,7 +177,7 @@ def iniciar_generacion(
     threading.Thread(
         target=_run_generar,
         args=(titular, imagen_filename, numero, seccion, logo_file, source_url,
-              font_size, letter_spacing, color_brightness),
+              font_size, letter_spacing, color_brightness, logo_width),
         daemon=True,
     ).start()
     return True
@@ -493,6 +494,7 @@ def _build_ffmpeg_cmd(
     salida:           Path,
     first_line_y:     int   = 0,
     color_brightness: float = 1.0,
+    logo_width:       int   = LOGO_WIDTH,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
     cmd = ["ffmpeg", "-y"]
@@ -609,7 +611,7 @@ def _build_ffmpeg_cmd(
     # X aligned with text; Y = 30 px above the first line of text
     if "logo" in layer_idx:
         i = layer_idx["logo"]
-        logo_layout = _get_logo_layout(first_line_y)
+        logo_layout = _get_logo_layout(first_line_y, logo_width)
         flt.append(
             f"[{i}:v]scale={logo_layout['width']}:-1,setpts=PTS-STARTPTS[logo_l]"
         )
@@ -678,6 +680,8 @@ def generar_preview(item: dict) -> dict:
         font_size      = int(_fs) if _fs is not None else None
         _ls            = item.get("letter_spacing")
         letter_spacing = int(_ls) if _ls is not None else -2
+        _lw            = item.get("logo_width")
+        logo_width     = int(_lw) if _lw else LOGO_WIDTH
 
         config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
 
@@ -733,7 +737,7 @@ def generar_preview(item: dict) -> dict:
         if assets.get("logo"):
             with Image.open(assets["logo"]) as logo:
                 logo = logo.convert("RGBA")
-                logo_layout = _get_logo_layout(first_line_y)
+                logo_layout = _get_logo_layout(first_line_y, logo_width)
                 ratio  = logo_layout["width"] / logo.width
                 logo_h = int(logo.height * ratio)
                 logo   = logo.resize((logo_layout["width"], logo_h), Image.Resampling.LANCZOS)
@@ -769,6 +773,8 @@ def _generar_clip_item(
     letter_spacing = int(item.get("letter_spacing") or 0)
     color_brightness = float(item.get("color_brightness") or 1.0)
     font_size = int(font_size_raw) if font_size_raw not in (None, "") else None
+    logo_width_raw = item.get("logo_width")
+    logo_width = int(logo_width_raw) if logo_width_raw else LOGO_WIDTH
 
     if not titular:
         raise ValueError("Titular vacío")
@@ -810,7 +816,7 @@ def _generar_clip_item(
     _estado["log"].append(f"→ [01 TIT] Construyendo pipeline FFmpeg...")
     cmd = _build_ffmpeg_cmd(
         foto_path, text_png, config, assets, salida,
-        first_line_y, color_brightness,
+        first_line_y, color_brightness, logo_width,
     )
 
     _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
@@ -833,6 +839,7 @@ def _run_generar(
     font_size: int | None = None,
     letter_spacing: int = -2,
     color_brightness: float = 1.0,
+    logo_width: int | None = None,
 ) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
     try:
@@ -846,6 +853,7 @@ def _run_generar(
                 "font_size": font_size,
                 "letter_spacing": letter_spacing,
                 "color_brightness": color_brightness,
+                "logo_width": logo_width,
             },
             numero,
         )
