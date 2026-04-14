@@ -854,8 +854,8 @@ function tRender() {
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.75rem;margin-top:.75rem;align-items:end">
             <div>
               <h3>Tamaño texto (px)</h3>
-              <input type="number" min="20" max="200" placeholder="Auto"
-                value="${item.font_size||''}"
+              <input type="number" min="20" max="200" placeholder="100"
+                value="${item.font_size||100}"
                 oninput="tUpdate(${item.id},'font_size',this.value?parseInt(this.value):null)"
                 style="width:100%">
             </div>
@@ -875,8 +875,8 @@ function tRender() {
             </div>
             <div>
               <h3>Tamaño logo (px)</h3>
-              <input type="number" min="100" max="3000" placeholder="1150"
-                value="${item.logo_width||''}"
+              <input type="number" min="100" max="3000" placeholder="250"
+                value="${item.logo_width||250}"
                 oninput="tUpdate(${item.id},'logo_width',this.value?parseInt(this.value):null)"
                 style="width:100%">
             </div>
