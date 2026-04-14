@@ -97,7 +97,7 @@ TITULAR_FRAMES   = TITULAR_DURATION * FPS   # 1 250 frames
 # color_opacity        : opacity of the multiply-blend colour layer (0–1)
 # text_y_ratio         : normalised Y position of the headline text
 TEXT_X_RATIO = 0.14446   # same for all sections
-LOGO_WIDTH = 250
+LOGO_WIDTH = 300
 LOGO_TEXT_GAP = 20
 
 SECTION_CONFIGS: dict[str, dict] = {
@@ -321,7 +321,15 @@ def _get_section_assets(seccion: str, logo_file: str | None) -> dict:
     ])
 
     # Gradient vignette --------------------------------------------------------
-    degradado = None  # desactivado
+    # degradado = None  # desactivado
+    degradado = _find_asset([
+        ASSETS / "degradados" / f"DEGRADADO.png",
+        #ASSETS / "degradados" / f"DEGRADADO {sec}.png",
+        #ASSETS / "degradados" / f"DEGRADADO {sec}.jpg",
+        #ASSETS / "degradados" / f"DEGRADADO {sec}.psd",
+        #ASSETS / f"DEGRADADO {sec}.png",
+        #ASSETS / f"DEGRADADO {sec}.jpg",
+    ])
 
     # Logo ---------------------------------------------------------------------
     if logo_file:
