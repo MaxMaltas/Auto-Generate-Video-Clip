@@ -216,3 +216,9 @@ assets/*.avi
 # temp files
 *.tmp
 temp/
+
+# Outout & Input files
+output/
+input/
+
+pauta.json
