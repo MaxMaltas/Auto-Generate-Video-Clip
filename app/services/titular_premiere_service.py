@@ -97,8 +97,8 @@ TITULAR_FRAMES   = TITULAR_DURATION * FPS   # 1 250 frames
 # color_opacity        : opacity of the multiply-blend colour layer (0–1)
 # text_y_ratio         : normalised Y position of the headline text
 TEXT_X_RATIO = 0.14446   # same for all sections
-LOGO_WIDTH = 1150
-LOGO_TEXT_GAP = -40
+LOGO_WIDTH = 250
+LOGO_TEXT_GAP = 20
 
 SECTION_CONFIGS: dict[str, dict] = {
     "BOLETINES": {
