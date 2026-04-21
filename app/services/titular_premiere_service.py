@@ -97,7 +97,7 @@ TITULAR_FRAMES   = TITULAR_DURATION * FPS   # 1 250 frames
 # color_opacity        : opacity of the multiply-blend colour layer (0–1)
 # text_y_ratio         : normalised Y position of the headline text
 TEXT_X_RATIO = 0.14446   # same for all sections
-LOGO_WIDTH = 300
+LOGO_HEIGHT = 300
 LOGO_TEXT_GAP = 20
 
 SECTION_CONFIGS: dict[str, dict] = {
@@ -216,12 +216,12 @@ def _find_asset(candidates: list) -> Path | None:
     return None
 
 
-def _get_logo_layout(first_line_y: int, logo_width: int = LOGO_WIDTH) -> dict[str, int]:
+def _get_logo_layout(first_line_y: int, logo_height: int = LOGO_HEIGHT) -> dict[str, int]:
     """Shared logo geometry so preview and final render stay aligned."""
     return {
         "x": int(TEXT_X_RATIO * WIDTH),
-        "width": logo_width,
-        # The real top edge is resolved with the scaled logo height in each renderer.
+        "height": logo_height,
+        # The real top edge is resolved with the scaled logo width in each renderer.
         "baseline_y": first_line_y - LOGO_TEXT_GAP,
     }
 
@@ -502,7 +502,7 @@ def _build_ffmpeg_cmd(
     salida:           Path,
     first_line_y:     int   = 0,
     color_brightness: float = 1.0,
-    logo_width:       int   = LOGO_WIDTH,
+    logo_width:       int   = LOGO_HEIGHT,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
     cmd = ["ffmpeg", "-y"]
@@ -621,7 +621,7 @@ def _build_ffmpeg_cmd(
         i = layer_idx["logo"]
         logo_layout = _get_logo_layout(first_line_y, logo_width)
         flt.append(
-            f"[{i}:v]scale={logo_layout['width']}:-1,setpts=PTS-STARTPTS[logo_l]"
+            f"[{i}:v]scale=-1:{logo_layout['height']},setpts=PTS-STARTPTS[logo_l]"
         )
         flt.append(
             f"[{current}][logo_l]overlay="
@@ -689,7 +689,7 @@ def generar_preview(item: dict) -> dict:
         _ls            = item.get("letter_spacing")
         letter_spacing = int(_ls) if _ls is not None else -2
         _lw            = item.get("logo_width")
-        logo_width     = int(_lw) if _lw else LOGO_WIDTH
+        logo_width     = int(_lw) if _lw else LOGO_HEIGHT
 
         config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
 
@@ -746,10 +746,10 @@ def generar_preview(item: dict) -> dict:
             with Image.open(assets["logo"]) as logo:
                 logo = logo.convert("RGBA")
                 logo_layout = _get_logo_layout(first_line_y, logo_width)
-                ratio  = logo_layout["width"] / logo.width
-                logo_h = int(logo.height * ratio)
-                logo   = logo.resize((logo_layout["width"], logo_h), Image.Resampling.LANCZOS)
-                logo_y = logo_layout["baseline_y"] - logo_h
+                ratio  = logo_layout["height"] / logo.height
+                logo_w = int(logo.width * ratio)
+                logo   = logo.resize((logo_w, logo_layout["height"]), Image.Resampling.LANCZOS)
+                logo_y = logo_layout["baseline_y"] - logo_layout["height"]
                 canvas.paste(logo, (logo_layout["x"], max(0, logo_y)), logo)
 
         # ── Save ──────────────────────────────────────────────────────────────
@@ -782,7 +782,7 @@ def _generar_clip_item(
     color_brightness = float(item.get("color_brightness") or 1.0)
     font_size = int(font_size_raw) if font_size_raw not in (None, "") else None
     logo_width_raw = item.get("logo_width")
-    logo_width = int(logo_width_raw) if logo_width_raw else LOGO_WIDTH
+    logo_width = int(logo_width_raw) if logo_width_raw else LOGO_HEIGHT
 
     if not titular:
         raise ValueError("Titular vacío")
