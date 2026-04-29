@@ -212,6 +212,7 @@ logs/
 #Large files
 assets/*.mov
 assets/*.avi
+assets/
 
 # temp files
 *.tmp
@@ -222,3 +223,5 @@ output/
 input/
 
 pauta.json
+
+.DS_Store

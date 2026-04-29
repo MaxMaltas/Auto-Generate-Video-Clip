@@ -1,5 +1,14 @@
 {
+  "cmmedia": "CMM_NEG.png",
   "diariodealmeria": "DIARIO ALMERIA.png",
   "diariodemallorca": "DIARIO MALLORCA.png",
-  "lasexta": "LASEXTA_2024.png"
+  "diariodevalladolid": "DIARIO DE VALLADOLID_NEG.png",
+  "elcorreo": "EL CORREO_NEG.png",
+  "eldebate": "EL DEBATE_NEG.png",
+  "eldia": "EL DIA LA OPINION DE TENERIFE_NEG.png",
+  "epe": "EL PERIODICO DE ESPANA HORIZONTAL.png",
+  "es": "ARA_NEG.png",
+  "huffingtonpost": "EL HUFFPOST_NEG.png",
+  "lasexta": "LASEXTA_2024_NEG.png",
+  "segre": "SEGRE_NEG.png"
 }

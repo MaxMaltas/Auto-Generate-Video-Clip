@@ -1,38 +1,37 @@
 [
   {
-    "foto": "01_editada.png",
-    "nombre": "A",
+    "foto": "01._JOSE_LUIS_editada.png",
+    "nombre": "JOSE LUIS, ROQUETAS DE MAR",
     "numero": "01",
-    "texto": ""
+    "texto": "Cumple 54 años",
+    "tipo": "FOTO"
   },
   {
+    "foto": "02._ROCIO_editada.png",
+    "nombre": "ROCIO",
     "numero": "02",
-    "nombre": "B",
-    "texto": "",
-    "foto": "02_editada.png"
+    "texto": "Cumple 16 años",
+    "tipo": "FOTO"
   },
   {
+    "foto": "03._CARMINA_editada.png",
+    "nombre": "CARMINA, VALENCIA",
     "numero": "03",
-    "nombre": "C",
-    "texto": "",
-    "foto": "03_editada.png"
+    "texto": "Cumple 60 años",
+    "tipo": "FOTO"
   },
   {
+    "foto": "WhatsApp_Image_2026-04-28_at_12.37.38_editada.png",
+    "nombre": "PATRI",
     "numero": "04",
-    "nombre": "D",
-    "texto": "",
-    "foto": "04_editada.png"
+    "texto": "Manda un mensaje de ánimo a su pareja que está en un proceso de recuperación",
+    "tipo": "FOTO"
   },
   {
+    "foto": "WhatsApp_Image_2026-04-28_at_12.55.30_editada.png",
+    "nombre": "PAQUI, AZNALCOLLAR",
     "numero": "05",
-    "nombre": "E",
-    "texto": "",
-    "foto": "05_editada.png"
-  },
-  {
-    "numero": "06",
-    "nombre": "F",
-    "texto": "",
-    "foto": "06_editada.png"
+    "texto": "Cumple 45 años",
+    "tipo": "FOTO"
   }
 ]
