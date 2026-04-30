@@ -393,8 +393,7 @@ def _measure_text_width(draw_tmp, text: str, font, letter_spacing: int = -2) -> 
         return bb[2] - bb[0]
     total = 0
     for i, char in enumerate(text):
-        bb = draw_tmp.textbbox((0, 0), char, font=font)
-        total += bb[2] - bb[0]
+        total += int(round(font.getlength(char)))
         if i < len(text) - 1:
             total += letter_spacing
     return total
@@ -406,8 +405,7 @@ def _draw_text_spaced(draw, x: int, y: int, text: str, font, fill, letter_spacin
         return
     for char in text:
         draw.text((x, y), char, font=font, fill=fill)
-        bb = draw.textbbox((0, 0), char, font=font)
-        x += (bb[2] - bb[0]) + letter_spacing
+        x += int(round(font.getlength(char))) + letter_spacing
 
 
 def _wrap_lines(text: str, font, max_width: int, draw: ImageDraw.Draw, letter_spacing: int = -2) -> list[str]:
