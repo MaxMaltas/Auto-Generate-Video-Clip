@@ -1,37 +1,58 @@
 [
   {
-    "foto": "01._JOSE_LUIS_editada.png",
-    "nombre": "JOSE LUIS, ROQUETAS DE MAR",
+    "foto": "01._JOAN_Y_MERCE_editada.png",
+    "nombre": "JOAN Y MERCE, MOLINS DE REI",
     "numero": "01",
-    "texto": "Cumple 54 años",
+    "texto": "Cumplen 61 años de casados el viernes",
     "tipo": "FOTO"
   },
   {
-    "foto": "02._ROCIO_editada.png",
-    "nombre": "ROCIO",
+    "foto": "02._INES_editada.png",
+    "nombre": "INES",
     "numero": "02",
-    "texto": "Cumple 16 años",
+    "texto": "Cumple 15 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "03._CARMINA_editada.png",
-    "nombre": "CARMINA, VALENCIA",
+    "foto": "03._PABLO_editada.png",
+    "nombre": "PABLO, ALZIRA",
     "numero": "03",
+    "texto": "Cumple 15 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "04._SONIA_Y_YOLANDA_editada.png",
+    "nombre": "SONIA Y YOLANDA",
+    "numero": "04",
+    "texto": "Cumplen años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "05._ANA_Y_JOSE_editada.png",
+    "nombre": "ANA Y JOSE, A CORUÑA",
+    "numero": "05",
+    "texto": "Cumplen 13 años de pareja ",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "06._ASUNCION_editada.png",
+    "nombre": "ASUNCION, JAEN",
+    "numero": "06",
     "texto": "Cumple 60 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "WhatsApp_Image_2026-04-28_at_12.37.38_editada.png",
-    "nombre": "PATRI",
-    "numero": "04",
-    "texto": "Manda un mensaje de ánimo a su pareja que está en un proceso de recuperación",
+    "foto": "07._PACO_Y_TERESA_editada.png",
+    "nombre": "PACO Y TERESA",
+    "numero": "07",
+    "texto": "Cumplen 20 años juntos",
     "tipo": "FOTO"
   },
   {
-    "foto": "WhatsApp_Image_2026-04-28_at_12.55.30_editada.png",
-    "nombre": "PAQUI, AZNALCOLLAR",
-    "numero": "05",
-    "texto": "Cumple 45 años",
+    "foto": "WhatsApp_Image_2026-04-29_at_11.22.32_editada.png",
+    "nombre": "LORENA, ASTORGA",
+    "numero": "08",
+    "texto": "Cumple 48 años",
     "tipo": "FOTO"
   }
 ]
