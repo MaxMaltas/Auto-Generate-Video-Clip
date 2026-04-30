@@ -88,7 +88,7 @@ def _domain_key_from_url(url: str) -> str:
         return ""
 
 # ── Timing ───────────────────────────────────────────────────────────────────
-TITULAR_DURATION = 7.5         # seconds
+TITULAR_DURATION = 15         # seconds
 TITULAR_FRAMES   = TITULAR_DURATION * FPS   # 1 250 frames
 
 # ── Section configurations (from TITULARES 2024.xml) ─────────────────────────
