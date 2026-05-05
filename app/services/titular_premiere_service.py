@@ -70,11 +70,34 @@ def get_logo_mappings() -> dict:
         return _load_mappings()
 
 
-def save_logo_mapping(domain_key: str, logo_filename: str) -> None:
-    """Persist a domain → logo association."""
+def get_logo_height(logo_filename: str) -> int | None:
+    """Return the stored height (px) for a logo file, or None if not set."""
+    with _mappings_lock:
+        data = _load_mappings()
+        heights = data.get("_logo_heights", {})
+        val = heights.get(logo_filename)
+        return int(val) if val else None
+
+
+def save_logo_height(logo_filename: str, height: int) -> None:
+    """Persist a logo filename → height association in logo_mappings.json."""
+    with _mappings_lock:
+        data = _load_mappings()
+        if "_logo_heights" not in data:
+            data["_logo_heights"] = {}
+        data["_logo_heights"][logo_filename] = height
+        _save_mappings(data)
+
+
+def save_logo_mapping(domain_key: str, logo_filename: str, logo_height: int | None = None) -> None:
+    """Persist a domain → logo association and optionally the logo height."""
     with _mappings_lock:
         data = _load_mappings()
         data[domain_key.strip().lower()] = logo_filename
+        if logo_height is not None:
+            if "_logo_heights" not in data:
+                data["_logo_heights"] = {}
+            data["_logo_heights"][logo_filename] = logo_height
         _save_mappings(data)
 
 
@@ -687,7 +710,7 @@ def generar_preview(item: dict) -> dict:
         _ls            = item.get("letter_spacing")
         letter_spacing = int(_ls) if _ls is not None else -2
         _lw            = item.get("logo_width")
-        logo_width     = int(_lw) if _lw else LOGO_HEIGHT
+        logo_width     = int(_lw) if _lw else None
 
         config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
 
@@ -715,6 +738,10 @@ def generar_preview(item: dict) -> dict:
             logo_file = _detect_logo_from_url(source_url)
         elif not logo_file:
             logo_file = DEFAULT_LOGO
+
+        # Use stored logo height as fallback if no explicit value was provided
+        if logo_width is None:
+            logo_width = get_logo_height(logo_file) or LOGO_HEIGHT
 
         assets = _get_section_assets(seccion, logo_file)
 
@@ -780,7 +807,7 @@ def _generar_clip_item(
     color_brightness = float(item.get("color_brightness") or 1.0)
     font_size = int(font_size_raw) if font_size_raw not in (None, "") else None
     logo_width_raw = item.get("logo_width")
-    logo_width = int(logo_width_raw) if logo_width_raw else LOGO_HEIGHT
+    logo_width = int(logo_width_raw) if logo_width_raw else None
 
     if not titular:
         raise ValueError("Titular vacío")
@@ -804,6 +831,11 @@ def _generar_clip_item(
         _estado["log"].append(f"→ Logo detectado: {logo_file}")
     elif not logo_file:
         logo_file = DEFAULT_LOGO
+
+    # Use stored logo height as fallback if no explicit value was provided
+    if logo_width is None:
+        logo_width = get_logo_height(logo_file) or LOGO_HEIGHT
+        _estado["log"].append(f"→ Alto de logo: {logo_width}px")
 
     assets = _get_section_assets(sec, logo_file)
     found = [k for k, v in assets.items() if v]
