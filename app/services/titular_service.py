@@ -40,6 +40,9 @@ HEADERS = {
 
 MAX_DOWNLOAD_BYTES = 15 * 1024 * 1024  # 15 MB
 
+_PLAYWRIGHT_PAGE_TIMEOUT = 30_000     # ms – domcontentloaded
+_PLAYWRIGHT_IDLE_TIMEOUT =  5_000     # ms – networkidle grace period
+
 
 def _is_private_host(hostname: str) -> bool:
     """Best-effort private/loopback/link-local detection to reduce SSRF risk."""
@@ -78,11 +81,14 @@ def extraer_de_url(url: str) -> dict[str, Any]:
     """
     Intenta extraer titular e imagen probando cada estrategia en orden.
     Pasa a la siguiente si la anterior falla o no devuelve titular.
+    La última estrategia usa Playwright (headless Chromium) para sitios que
+    requieren JavaScript o protección anti-bot (Cloudflare, etc.).
     """
     orden = [
         ("headers_h1", _estrategia_headers_h1),
         ("og_tags", _estrategia_og_tags),
         ("backend_proxy", _estrategia_backend_proxy),
+        ("playwright", _estrategia_playwright),
     ]
 
     for key, fn in orden:
@@ -141,6 +147,44 @@ def _estrategia_backend_proxy(url: str) -> dict[str, str | None]:
         "imagen_url": _extraer_imagen(soup, url),
     }
 
+
+def _estrategia_playwright(url: str) -> dict[str, str | None]:
+    """
+    Fallback con Playwright (Chromium headless) para sitios que requieren
+    JavaScript o tienen protección anti-bot (Cloudflare, etc.).
+    Requiere haber ejecutado: playwright install chromium
+    """
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage"],
+        )
+        context = browser.new_context(
+            user_agent=HEADERS["User-Agent"],
+            locale="es-ES",
+            extra_http_headers={
+                "Accept-Language": HEADERS["Accept-Language"],
+            },
+        )
+        page = context.new_page()
+        try:
+            page.goto(url, wait_until="domcontentloaded", timeout=_PLAYWRIGHT_PAGE_TIMEOUT)
+            # Wait up to _PLAYWRIGHT_IDLE_TIMEOUT for any lazy-loaded content to settle
+            try:
+                page.wait_for_load_state("networkidle", timeout=_PLAYWRIGHT_IDLE_TIMEOUT)
+            except Exception:
+                pass
+            html = page.content()
+        finally:
+            browser.close()
+
+    soup = BeautifulSoup(html, "html.parser")
+    return {
+        "titular": _extraer_titular(soup),
+        "imagen_url": _extraer_imagen(soup, url),
+    }
 
 
 def _extraer_titular(soup) -> str | None:

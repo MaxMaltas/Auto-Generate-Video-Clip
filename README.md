@@ -56,7 +56,7 @@ Incluye dos flujos principales:
 - **Backend**: Python + Flask.
 - **Render/Procesado**: FFmpeg (`ffmpeg-python` + llamadas a binario FFmpeg).
 - **Imágenes/Títulos**: Pillow.
-- **Extracción web de titulares**: `requests` + `beautifulsoup4`.
+- **Extracción web de titulares**: `requests` + `beautifulsoup4` + `playwright` (fallback headless).
 - **Exportación Word**: `python-docx`.
 - **Frontend**: HTML + CSS + JavaScript vanilla (UI en pestañas).
 
@@ -116,9 +116,13 @@ Instalación base:
 pip install -r requirements.txt
 ```
 
-Para el módulo de titulares (extracción por URL), asegúrate de tener también:
+Para el módulo de titulares (extracción por URL), instala también el navegador Chromium que usa Playwright como fallback para sitios con protección anti-bot (Cloudflare, JS rendering, etc.):
 
-> Nota: `requirements.txt` actual contiene `flask`, `ffmpeg-python`, `python-docx`, `beautifulsoup4` y `pillow`.
+```bash
+playwright install chromium
+```
+
+> `requirements.txt` contiene: `flask`, `ffmpeg-python`, `python-docx`, `beautifulsoup4`, `pillow`, `requests` y `playwright`.
 
 ---
 
@@ -144,6 +148,7 @@ venv\Scripts\activate
 
 ```bash
 pip install -r requirements.txt
+playwright install chromium
 ```
 
 6. Ejecuta:
@@ -163,6 +168,7 @@ cd Auto-Generate-Video-Clip
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+playwright install chromium
 python run.py
 ```
 
