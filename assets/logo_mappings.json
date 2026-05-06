@@ -1,15 +1,15 @@
 {
-  "aztecaguerrero": "TV AZTECA_NEG.png",
-  "cmmedia": "CMM_NEG.png",
-  "diariodealmeria": "DIARIO ALMERIA.png",
-  "diariodemallorca": "DIARIO MALLORCA.png",
-  "diariodevalladolid": "DIARIO DE VALLADOLID_NEG.png",
-  "elcorreo": "EL CORREO_NEG.png",
-  "eldebate": "EL DEBATE_NEG.png",
-  "eldia": "EL DIA LA OPINION DE TENERIFE_NEG.png",
-  "epe": "EL PERIODICO DE ESPANA HORIZONTAL.png",
-  "es": "ARA_NEG.png",
-  "huffingtonpost": "EL HUFFPOST_NEG.png",
-  "lasexta": "LASEXTA_2024_NEG.png",
-  "segre": "SEGRE_NEG.png"
+  "aztecaguerrero": ["TV AZTECA_NEG.png", null],
+  "cmmedia": ["CMM_NEG.png", null],
+  "diariodealmeria": ["DIARIO ALMERIA.png", null],
+  "diariodemallorca": ["DIARIO MALLORCA.png", null],
+  "diariodevalladolid": ["DIARIO DE VALLADOLID_NEG.png", null],
+  "elcorreo": ["EL CORREO_NEG.png", null],
+  "eldebate": ["EL DEBATE_NEG.png", null],
+  "eldia": ["EL DIA LA OPINION DE TENERIFE_NEG.png", null],
+  "epe": ["EL PERIODICO DE ESPANA HORIZONTAL.png", null],
+  "es": ["ARA_NEG.png", null],
+  "huffingtonpost": ["EL HUFFPOST_NEG.png", null],
+  "lasexta": ["LASEXTA_2024_NEG.png", null],
+  "segre": ["SEGRE_NEG.png", null]
 }
