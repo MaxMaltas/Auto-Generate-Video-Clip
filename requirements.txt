@@ -3,3 +3,4 @@ ffmpeg-python
 python-docx
 pillow
 beautifulsoup4
+requests

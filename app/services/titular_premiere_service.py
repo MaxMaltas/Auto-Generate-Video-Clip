@@ -24,6 +24,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from PIL import Image, ImageDraw, ImageFont
+from werkzeug.utils import secure_filename
 
 from app.core.config import INPUT, OUTPUT, TEMP, WIDTH, HEIGHT, FPS
 
@@ -35,6 +36,7 @@ TITULAR_TEMP.mkdir(parents=True, exist_ok=True)
 DEFAULT_LOGO      = "EL PAIS_NEG.png"
 MEDIOS_DIR        = ASSETS / "MEDIOS"
 LOGO_MAPPINGS_FILE = ASSETS / "logo_mappings.json"
+MEDIOS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Logo mappings helpers ─────────────────────────────────────────────────────
 _mappings_lock = threading.Lock()
@@ -77,6 +79,24 @@ def get_logos_list() -> list[str]:
         p.name for p in MEDIOS_DIR.glob("*")
         if p.suffix.lower() in (".png", ".jpg")
     )
+
+
+def save_uploaded_logo(file_storage) -> str:
+    """Save a user-uploaded logo into assets/MEDIOS, allowing only PNG files."""
+    if not file_storage or not file_storage.filename:
+        raise ValueError("No se proporcionó ningún archivo")
+
+    filename = secure_filename(file_storage.filename)
+    if not filename:
+        raise ValueError("Nombre de archivo inválido")
+
+    ext = Path(filename).suffix.lower()
+    if ext != ".png":
+        raise ValueError("Solo se permiten archivos PNG")
+
+    dest = MEDIOS_DIR / filename
+    file_storage.save(dest)
+    return filename
 
 
 def get_logo_mappings() -> dict:
