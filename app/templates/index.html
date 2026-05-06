@@ -964,10 +964,12 @@ async function tLogoChange(id, logoFile) {
     try {
       const hostname   = new URL(item.source_url).hostname.replace(/^www\./, '');
       const domain_key = hostname.split('.')[0].toLowerCase();
+      // logo_width stores the logo height in pixels (named historically; used as height in scale filter)
+      const logo_height = item.logo_width ? parseInt(item.logo_width) : null;
       await fetch('/titulares/logo-mapping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain_key, logo_file: logoFile }),
+        body: JSON.stringify({ domain_key, logo_file: logoFile, logo_height }),
       });
       showToast(`Relación guardada: ${domain_key} → ${logoFile}`);
     } catch(e) { /* silencioso */ }
@@ -1040,6 +1042,7 @@ async function titularesExtraer() {
       source_url: url,
       seccion: 'SUCESOS',
       logo_file: d.logo_file || null,
+      logo_width: d.logo_height || null,  // server returns logo_height; UI stores it as logo_width
       font_size: null,
       letter_spacing: -2,
       color_brightness: 1.0,

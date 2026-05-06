@@ -29,6 +29,7 @@ def extraer():
         if result["imagen_url"]:
             imagen_filename = descargar_imagen(result["imagen_url"])
         logo_file = pm_svc._detect_logo_from_url(url) if url else None
+        logo_height = pm_svc.get_logo_height(logo_file) if logo_file else None
         return jsonify({
             "ok": True,
             "titular": result["titular"],
@@ -36,6 +37,7 @@ def extraer():
             "strategy": result.get("strategy"),
             "imagen": imagen_filename,
             "logo_file": logo_file,
+            "logo_height": logo_height,
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)[:200]})
@@ -170,10 +172,12 @@ def logo_mapping_get():
 
 @titular_bp.route("/titulares/logo-mapping", methods=["POST"])
 def logo_mapping_set():
-    data       = request.get_json(force=True)
-    domain_key = (data.get("domain_key") or "").strip().lower()
-    logo_file  = (data.get("logo_file")  or "").strip()
+    data            = request.get_json(force=True)
+    domain_key      = (data.get("domain_key") or "").strip().lower()
+    logo_file       = (data.get("logo_file")  or "").strip()
+    logo_height_raw = data.get("logo_height")
+    logo_height     = int(logo_height_raw) if logo_height_raw else None
     if not domain_key or not logo_file:
         return jsonify({"ok": False, "error": "domain_key y logo_file requeridos"})
-    pm_svc.save_logo_mapping(domain_key, logo_file)
+    pm_svc.save_logo_mapping(domain_key, logo_file, logo_height)
     return jsonify({"ok": True})
