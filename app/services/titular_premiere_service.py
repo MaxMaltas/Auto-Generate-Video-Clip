@@ -63,7 +63,10 @@ def _parse_entry(value) -> tuple[str, int | None]:
     """Parse a mapping entry (string or [filename, height] list) into (filename, height)."""
     if isinstance(value, list) and value:
         filename = value[0]
-        height = int(value[1]) if len(value) > 1 and value[1] is not None else None
+        try:
+            height = int(value[1]) if len(value) > 1 and value[1] is not None else None
+        except (ValueError, TypeError):
+            height = None
         return filename, height
     return str(value), None
 
