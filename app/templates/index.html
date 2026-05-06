@@ -11,10 +11,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 header{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}
 header h1{font-size:1.2rem;font-weight:600;letter-spacing:-.02em}
 header span{font-size:.75rem;color:var(--muted);background:var(--border);padding:2px 8px;border-radius:20px}
-.tabs{display:flex;gap:2px;padding:1.5rem 2rem .5rem;border-bottom:1px solid var(--border)}
+.tabs{display:flex;gap:2px;padding:1.5rem 2rem .5rem;border-bottom:1px solid var(--border);max-width:1500px;width:100%;margin:0 auto}
 .tab{padding:8px 20px;border-radius:8px 8px 0 0;cursor:pointer;font-size:14px;color:var(--muted);border:1px solid transparent;border-bottom:none;transition:all .15s}
 .tab.active{background:var(--card);color:var(--text);border-color:var(--border)}
-.panel{display:none;padding:2rem;max-width:1100px}
+.panel{display:none;padding:2rem;max-width:1100px;width:100%;margin:0 auto}
 .panel.active{display:block}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
 .card h2{font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--text)}
@@ -53,6 +53,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .preview-card .info strong{display:block;margin-bottom:2px}
 .preview-card .info span{color:var(--muted);font-size:12px}
 .preview-card .actions{padding:0 .75rem .75rem;display:flex;gap:6px}
+.t-headline-card{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:1.5rem;align-items:start}
+.t-headline-side{display:flex;flex-direction:column;gap:.5rem;min-height:100%}
+.t-preview-frame{flex:1;aspect-ratio:16/9;border:1px solid var(--border);border-radius:8px;background:#111;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.t-preview-frame img{width:100%;height:100%;object-fit:contain;display:block;background:#111}
+.t-preview-empty{height:100%;width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;padding:1rem;text-align:center}
+#tab-titulares{max-width:1500px}
 .row{display:flex;gap:1rem;align-items:center}
 .flex-1{flex:1}
 #status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px}
@@ -62,6 +68,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 #sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;transition:background .3s}
 #sync-dot.syncing{background:var(--yellow);animation:pulse 0.6s infinite}
 #sync-dot.remote{background:var(--accent);animation:pulse 0.8s infinite}
+@media (max-width: 900px){.t-headline-card{grid-template-columns:1fr}.t-headline-side{min-height:0}.t-preview-frame{min-height:240px;aspect-ratio:auto}}
 
 </style>
 </head>
@@ -821,7 +828,7 @@ function tRender() {
   empty.style.display = 'none';
   container.innerHTML = tLista.map((item, idx) => `
     <div class="card" style="margin-bottom:0;position:relative" id="t-item-${item.id}">
-      <div style="display:grid;grid-template-columns:1fr 220px;gap:1.25rem;align-items:start">
+      <div class="t-headline-card">
 
         <!-- Left: text + controls -->
         <div>
@@ -844,6 +851,11 @@ function tRender() {
             <select style="width:100%" onchange="tLogoChange(${item.id}, this.value)">
               ${tLogoOptions(item.logo_file||'')}
             </select>
+            <label class="btn btn-ghost" style="width:100%;font-size:12px;text-align:center;margin-top:.5rem;display:block">
+              Añadir logo PNG
+              <input type="file" accept="image/png" style="display:none"
+                onchange="tUploadLogo(${item.id}, this)">
+            </label>
             ${item.logo_file
               ? `<div style="font-size:11px;color:var(--green);margin-top:3px">✓ Guardado para «${item.source_url ? new URL(item.source_url).hostname.replace(/^www\./,'') : ''}»</div>`
               : (item.source_url ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">Auto-detectado desde URL</div>` : '')
@@ -888,14 +900,8 @@ function tRender() {
           </div>
         </div>
 
-        <!-- Right: image + preview -->
-        <div>
-          <h3>Imagen</h3>
-          ${item.imagen
-            ? `<img src="/titulares/thumb/${encodeURIComponent(item.imagen)}?t=${Date.now()}"
-                style="width:100%;border-radius:8px;object-fit:cover;max-height:130px;border:1px solid var(--border);display:block;margin-bottom:.5rem">`
-            : `<div style="height:90px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;margin-bottom:.5rem">Sin imagen</div>`
-          }
+        <!-- Right: upload + preview -->
+        <div class="t-headline-side">
           <label class="btn btn-ghost" style="width:100%;font-size:12px;text-align:center;margin-bottom:.35rem;display:block">
             Subir imagen manual
             <input type="file" accept="image/png,image/jpeg,image/jpg" style="display:none"
@@ -905,12 +911,13 @@ function tRender() {
             ? `<div style="font-size:11px;color:var(--muted);word-break:break-word;margin-bottom:.5rem">${item.imagen}</div>`
             : ''
           }
-          ${item.preview
-            ? `<h3 style="margin-top:.5rem">Preview</h3>
-               <img src="/titulares/pm-thumb/${encodeURIComponent(item.preview)}?t=${Date.now()}"
-                style="width:100%;border-radius:6px;border:1px solid var(--border);display:block;background:#111">`
-            : ''
-          }
+          <h3 style="margin-top:.25rem">Preview</h3>
+          <div class="t-preview-frame">
+            ${item.preview
+              ? `<img src="/titulares/pm-thumb/${encodeURIComponent(item.preview)}?t=${Date.now()}" alt="Preview del titular">`
+              : `<div class="t-preview-empty">${item.imagen ? 'Genera un preview para ver la composición' : 'Sube una imagen para poder generar el preview'}</div>`
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -1027,6 +1034,31 @@ async function tUploadImage(id, input) {
     showToast('Imagen añadida al titular');
   } catch (e) {
     showToast('Error de conexión al subir la imagen', true);
+  } finally {
+    if (input) input.value = '';
+  }
+}
+
+async function tUploadLogo(id, input) {
+  const file = input && input.files ? input.files[0] : null;
+  if (!file) return;
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    const r = await fetch('/titulares/upload-logo', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      showToast('Error subiendo logo: ' + (d.error || d.msg || 'desconocido'), true);
+      return;
+    }
+
+    tLogos = await fetch('/titulares/logos').then(res => res.json());
+    await tLogoChange(id, d.filename);
+    showToast(`Logo añadido: ${d.filename}`);
+  } catch (e) {
+    showToast('Error de conexión al subir el logo', true);
   } finally {
     if (input) input.value = '';
   }

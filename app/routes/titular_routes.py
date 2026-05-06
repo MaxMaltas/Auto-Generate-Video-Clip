@@ -165,6 +165,16 @@ def logos_list():
     return jsonify(pm_svc.get_logos_list())
 
 
+@titular_bp.route("/titulares/upload-logo", methods=["POST"])
+def upload_logo():
+    file = request.files.get("file")
+    try:
+        filename = pm_svc.save_uploaded_logo(file)
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    return jsonify({"ok": True, "filename": filename})
+
+
 @titular_bp.route("/titulares/logo-mapping", methods=["GET"])
 def logo_mapping_get():
     return jsonify(pm_svc.get_logo_mappings())
