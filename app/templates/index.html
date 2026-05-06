@@ -950,6 +950,19 @@ function tUpdate(id, key, value) {
     item[key] = value;
     item.preview = null;
     tSchedulePreview(id);
+    // Persist logo height whenever the size field changes
+    // (item.logo_width stores the logo height in px, named historically)
+    if (key === 'logo_width' && item.source_url && item.logo_file) {
+      try {
+        const hostname   = new URL(item.source_url).hostname.replace(/^www\./, '');
+        const domain_key = hostname.split('.')[0].toLowerCase();
+        fetch('/titulares/logo-mapping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain_key, logo_file: item.logo_file, logo_height: value ? parseInt(value) : null }),
+        }).catch(e => console.warn('logo-mapping save failed:', e));
+      } catch(e) { console.warn('logo-mapping save error:', e); }
+    }
   }
 }
 
