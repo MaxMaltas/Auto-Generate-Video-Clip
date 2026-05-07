@@ -24,6 +24,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from PIL import Image, ImageDraw, ImageFont
+from werkzeug.utils import secure_filename
 
 from app.core.config import INPUT, OUTPUT, TEMP, WIDTH, HEIGHT, FPS
 
@@ -35,13 +36,16 @@ TITULAR_TEMP.mkdir(parents=True, exist_ok=True)
 DEFAULT_LOGO      = "EL PAIS_NEG.png"
 MEDIOS_DIR        = ASSETS / "MEDIOS"
 LOGO_MAPPINGS_FILE = ASSETS / "logo_mappings.json"
+MEDIOS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Logo mappings helpers ─────────────────────────────────────────────────────
 _mappings_lock = threading.Lock()
 
 
 def _load_mappings() -> dict:
-    """Return {domain_key: logo_filename} from the JSON file."""
+    """Return {domain_key: logo_entry} from the JSON file.
+    Each entry is either a legacy string or the new [filename, height] list.
+    """
     try:
         if LOGO_MAPPINGS_FILE.exists():
             return json.loads(LOGO_MAPPINGS_FILE.read_text(encoding="utf-8"))
@@ -57,6 +61,18 @@ def _save_mappings(data: dict) -> None:
     )
 
 
+def _parse_entry(value) -> tuple[str, int | None]:
+    """Parse a mapping entry (string or [filename, height] list) into (filename, height)."""
+    if isinstance(value, list) and value:
+        filename = value[0]
+        try:
+            height = int(value[1]) if len(value) > 1 and value[1] is not None else None
+        except (ValueError, TypeError):
+            height = None
+        return filename, height
+    return str(value), None
+
+
 def get_logos_list() -> list[str]:
     """Sorted list of all logo filenames in MEDIOS_DIR."""
     return sorted(
@@ -65,39 +81,86 @@ def get_logos_list() -> list[str]:
     )
 
 
+def save_uploaded_logo(file_storage) -> str:
+    """Save a user-uploaded logo into assets/MEDIOS, allowing only PNG files."""
+    if not file_storage or not file_storage.filename:
+        raise ValueError("No se proporcionó ningún archivo")
+
+    filename = secure_filename(file_storage.filename)
+    if not filename:
+        raise ValueError("Nombre de archivo inválido")
+
+    ext = Path(filename).suffix.lower()
+    if ext != ".png":
+        raise ValueError("Solo se permiten archivos PNG")
+
+    dest = MEDIOS_DIR / filename
+    file_storage.save(dest)
+    return filename
+
+
 def get_logo_mappings() -> dict:
     with _mappings_lock:
         return _load_mappings()
 
 
 def get_logo_height(logo_filename: str) -> int | None:
-    """Return the stored height (px) for a logo file, or None if not set."""
+    """Return the stored height (px) for a logo file, or None if not set.
+    Searches all domain entries whose filename matches; also checks the
+    legacy _logo_heights key for backward compatibility.
+    """
     with _mappings_lock:
         data = _load_mappings()
-        heights = data.get("_logo_heights", {})
-        val = heights.get(logo_filename)
+        for key, value in data.items():
+            if key == "_logo_heights":
+                continue
+            fname, height = _parse_entry(value)
+            if fname == logo_filename and height is not None:
+                return height
+        # Fallback: legacy _logo_heights section
+        val = data.get("_logo_heights", {}).get(logo_filename)
         return int(val) if val else None
 
 
 def save_logo_height(logo_filename: str, height: int) -> None:
-    """Persist a logo filename → height association in logo_mappings.json."""
+    """Persist a height for a logo by updating all domain entries that reference it."""
     with _mappings_lock:
         data = _load_mappings()
-        if "_logo_heights" not in data:
-            data["_logo_heights"] = {}
-        data["_logo_heights"][logo_filename] = height
+        updated = False
+        for key in list(data.keys()):
+            if key == "_logo_heights":
+                continue
+            fname, _ = _parse_entry(data[key])
+            if fname == logo_filename:
+                data[key] = [fname, height]
+                updated = True
+        if not updated:
+            # No domain entry found; keep in legacy section as fallback
+            if "_logo_heights" not in data:
+                data["_logo_heights"] = {}
+            data["_logo_heights"][logo_filename] = height
         _save_mappings(data)
 
 
 def save_logo_mapping(domain_key: str, logo_filename: str, logo_height: int | None = None) -> None:
-    """Persist a domain → logo association and optionally the logo height."""
+    """Persist a domain → logo association with optional height.
+    Stores as [filename, height] in the domain entry.  Migrates any
+    legacy string entries and removes the old _logo_heights section.
+    """
     with _mappings_lock:
         data = _load_mappings()
-        data[domain_key.strip().lower()] = logo_filename
-        if logo_height is not None:
-            if "_logo_heights" not in data:
-                data["_logo_heights"] = {}
-            data["_logo_heights"][logo_filename] = logo_height
+        # Migrate legacy _logo_heights into per-domain entries
+        old_heights: dict = data.pop("_logo_heights", {})
+        # Normalise existing string entries to [filename, height] lists
+        for key in list(data.keys()):
+            if isinstance(data[key], str):
+                data[key] = [data[key], old_heights.get(data[key])]
+        # Preserve existing height if caller doesn't supply one
+        if logo_height is None:
+            existing = data.get(domain_key.strip().lower())
+            if existing is not None:
+                _, logo_height = _parse_entry(existing)
+        data[domain_key.strip().lower()] = [logo_filename, logo_height]
         _save_mappings(data)
 
 
@@ -283,7 +346,7 @@ def _detect_logo_from_url(url: str) -> str:
     # ── Step 0: manual mapping takes priority ─────────────────────────────────
     mappings = _load_mappings()
     if raw_key in mappings:
-        logo_name = mappings[raw_key]
+        logo_name, _ = _parse_entry(mappings[raw_key])
         if (MEDIOS_DIR / logo_name).exists():
             return logo_name
 
