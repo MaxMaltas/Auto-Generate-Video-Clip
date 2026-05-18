@@ -240,8 +240,28 @@ def get_estado() -> dict:
     return dict(_estado)
 
 
-def get_secciones() -> list[str]:
-    return list(SECTION_CONFIGS.keys())
+def get_secciones() -> dict:
+    return {
+        "secciones": list(SECTION_CONFIGS.keys()),
+        "configs": {
+            name: {"color_opacity": cfg.get("color_opacity", 0.88)}
+            for name, cfg in SECTION_CONFIGS.items()
+        },
+    }
+
+
+def _clamp_opacity(value: object, default: float = 0.88) -> float:
+    try:
+        opacity = float(value)
+    except (TypeError, ValueError):
+        opacity = default
+    return max(0.0, min(1.0, opacity))
+
+
+def _item_color_opacity(item: dict, config: dict) -> float:
+    default = config.get("color_opacity", 0.88)
+    value = item.get("color_opacity")
+    return _clamp_opacity(default if value in (None, "") else value, default)
 
 
 def iniciar_generacion(
@@ -253,7 +273,7 @@ def iniciar_generacion(
     source_url: str | None = None,
     font_size: int | None = None,
     letter_spacing: int = -2,
-    color_brightness: float = 1.0,
+    color_opacity: float | None = None,
     logo_width: int | None = None,
 ) -> bool:
     with _lock:
@@ -263,7 +283,7 @@ def iniciar_generacion(
     threading.Thread(
         target=_run_generar,
         args=(titular, imagen_filename, numero, seccion, logo_file, source_url,
-              font_size, letter_spacing, color_brightness, logo_width),
+              font_size, letter_spacing, color_opacity, logo_width),
         daemon=True,
     ).start()
     return True
@@ -585,7 +605,7 @@ def _build_ffmpeg_cmd(
     assets:           dict,
     salida:           Path,
     first_line_y:     int   = 0,
-    color_brightness: float = 1.0,
+    color_opacity:    float | None = None,
     logo_width:       int   = LOGO_HEIGHT,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
@@ -662,20 +682,15 @@ def _build_ffmpeg_cmd(
     # Step 5 – Colour overlay
     if "color" in layer_idx:
         i       = layer_idx["color"]
-        opacity = config.get("color_opacity", 0.88)
-        # brightness: 1.0 = original, <1 = darker, >1 = brighter (clamp to 0–3)
-        brightness_filter = ""
-        if color_brightness != 1.0:
-            b = max(0.0, min(3.0, color_brightness))
-            brightness_filter = f"eq=brightness={b - 1.0:.3f},"
+        opacity = _clamp_opacity(
+            color_opacity if color_opacity is not None else config.get("color_opacity", 0.88)
+        )
 
         if color_is_png:
-            png_opacity = min(opacity, 1.0)
             flt.append(
                 f"[{i}:v]scale={WIDTH}:{HEIGHT},"
                 f"format=rgba,"
-                f"{brightness_filter}"
-                f"colorchannelmixer=aa={png_opacity:.3f},"
+                f"colorchannelmixer=aa={opacity:.3f},"
                 f"setpts=PTS-STARTPTS[col_tint]"
             )
             flt.append(f"[{current}][col_tint]overlay=format=auto[with_col]")
@@ -683,8 +698,8 @@ def _build_ffmpeg_cmd(
             # Vídeo .mov/.mp4: multiply blend auténtico (como en Premiere Pro)
             flt.append(
                 f"[{current}]format=rgb24[base_rgb];"
-                f"[{i}:v]scale={WIDTH}:{HEIGHT},{brightness_filter}format=rgb24,setpts=PTS-STARTPTS[col_rgb];"
-                f"[base_rgb][col_rgb]blend=all_mode=multiply:all_opacity={opacity},"
+                f"[{i}:v]scale={WIDTH}:{HEIGHT},format=rgb24,setpts=PTS-STARTPTS[col_rgb];"
+                f"[base_rgb][col_rgb]blend=all_mode=multiply:all_opacity={opacity:.3f},"
                 f"format=yuv420p[with_col]"
             )
         current = "with_col"
@@ -736,7 +751,7 @@ def _build_ffmpeg_cmd(
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Each entry: { id, titular, imagen, seccion, logo_file, source_url,
-#               font_size, letter_spacing, color_brightness, preview }
+#               font_size, letter_spacing, color_opacity, preview }
 _titulares_list: list[dict] = []
 _titulares_lock = threading.Lock()
 
@@ -767,7 +782,6 @@ def generar_preview(item: dict) -> dict:
         imagen_filename  = (item.get("imagen") or "").strip()
         source_url       = (item.get("source_url") or "").strip() or None
         logo_file        = (item.get("logo_file") or "").strip() or None
-        color_brightness = float(item.get("color_brightness") or 1.0)
         _fs            = item.get("font_size")
         font_size      = int(_fs) if _fs is not None else None
         _ls            = item.get("letter_spacing")
@@ -776,6 +790,7 @@ def generar_preview(item: dict) -> dict:
         logo_width     = int(_lw) if _lw else None
 
         config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
+        color_opacity = _item_color_opacity(item, config)
 
         # ── Track 1: Photo ────────────────────────────────────────────────────
         canvas = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
@@ -813,11 +828,7 @@ def generar_preview(item: dict) -> dict:
             if ext in (".png", ".jpg", ".jpeg"):
                 with Image.open(assets["color"]) as col:
                     col = col.convert("RGBA").resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
-                    opacity = config.get("color_opacity", 0.88)
-                    # Apply brightness by scaling pixel values
-                    if color_brightness != 1.0:
-                        from PIL import ImageEnhance
-                        col = ImageEnhance.Brightness(col).enhance(color_brightness)
+                    opacity = color_opacity
                     # Adjust alpha channel by opacity
                     a = col.split()[3]
                     a = a.point(lambda v: int(v * opacity))
@@ -867,7 +878,6 @@ def _generar_clip_item(
     source_url = (item.get("source_url") or "").strip() or None
     font_size_raw = item.get("font_size")
     letter_spacing = int(item.get("letter_spacing") or 0)
-    color_brightness = float(item.get("color_brightness") or 1.0)
     font_size = int(font_size_raw) if font_size_raw not in (None, "") else None
     logo_width_raw = item.get("logo_width")
     logo_width = int(logo_width_raw) if logo_width_raw else None
@@ -879,6 +889,7 @@ def _generar_clip_item(
 
     sec = seccion.upper()
     config = SECTION_CONFIGS.get(sec, SECTION_CONFIGS["SUCESOS"])
+    color_opacity = _item_color_opacity(item, config)
 
     foto_path = INPUT / _safe_name(imagen_filename)
     if not foto_path.exists():
@@ -917,7 +928,7 @@ def _generar_clip_item(
     _estado["log"].append(f"→ [01 TIT] Construyendo pipeline FFmpeg...")
     cmd = _build_ffmpeg_cmd(
         foto_path, text_png, config, assets, salida,
-        first_line_y, color_brightness, logo_width,
+        first_line_y, color_opacity, logo_width,
     )
 
     _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
@@ -939,7 +950,7 @@ def _run_generar(
     source_url: str | None,
     font_size: int | None = None,
     letter_spacing: int = -2,
-    color_brightness: float = 1.0,
+    color_opacity: float | None = None,
     logo_width: int | None = None,
 ) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
@@ -953,7 +964,7 @@ def _run_generar(
                 "source_url": source_url,
                 "font_size": font_size,
                 "letter_spacing": letter_spacing,
-                "color_brightness": color_brightness,
+                "color_opacity": color_opacity,
                 "logo_width": logo_width,
             },
             numero,
