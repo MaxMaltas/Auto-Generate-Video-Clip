@@ -1,93 +1,65 @@
 [
   {
-    "foto": "01._LUCIA_editada.png",
-    "nombre": "LUCIA",
+    "foto": "01._PAULA_editada.png",
+    "nombre": "PAULA",
     "numero": "01",
-    "texto": "Cumple 13 años",
+    "texto": "Cumple 18 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "02._VICENTA_editada.png",
-    "nombre": "VICENTA, LINARES",
+    "foto": "02._MAURO_editada.png",
+    "nombre": "MAURO, ZARAGOZA",
     "numero": "02",
-    "texto": "Cumple 94 años",
+    "texto": "Cumple 10 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "03._JORDI_editada.png",
-    "nombre": "JORDI, ALTEA",
+    "foto": "03._ANDREA_editada.png",
+    "nombre": "ANDREA, ALICANTE",
     "numero": "03",
-    "texto": "Cumple 51 años",
+    "texto": "Cumple 8 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "04._GALYA_editada.png",
-    "nombre": "GALYA",
+    "foto": "04._JUAN_editada.png",
+    "nombre": "JUAN",
     "numero": "04",
-    "texto": "Cumple 4 años",
+    "texto": "Cumple 68 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "05._ANA_CARMEN_editada.png",
-    "nombre": "ANA CARMEN",
+    "foto": "05._ALEX_editada.png",
+    "nombre": "ALEX, PAMPLONA",
     "numero": "05",
-    "texto": "Cumple 48 años",
+    "texto": "Cumple 14 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "06._JOSE_ANTONIO_editada.png",
-    "nombre": "JOSE ANTONIO",
+    "foto": "06._NANI_Y_RAIMON_editada.png",
+    "nombre": "NANI Y RAIMON",
     "numero": "06",
-    "texto": "Cumple 70 años",
+    "texto": "Cumplen 50 años de casados",
     "tipo": "FOTO"
   },
   {
-    "foto": "07._MILEY_editada.png",
-    "nombre": "MILEY",
+    "foto": "07._ULISES_editada.png",
+    "nombre": "ULISES",
     "numero": "07",
-    "texto": "Cumple 17 años",
+    "texto": "Cumple 46 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "08._ALVARO_editada.png",
-    "nombre": "ALVARO",
+    "foto": "08._ALBER_editada.png",
+    "nombre": "ALBER",
     "numero": "08",
-    "texto": "Cumple 13 años",
+    "texto": "Cumple 8 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "09._PAOLA_E_IRENE_editada.png",
-    "nombre": "PAOLA E IRENE",
+    "foto": "WhatsApp_Image_2026-05-15_at_10.59.23_editada.png",
+    "nombre": "FABIÁN",
     "numero": "09",
-    "texto": "Cuplen 10 y 4 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "10._VICTOR_editada.png",
-    "nombre": "VICTOR",
-    "numero": "10",
-    "texto": "Cumple 20 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "WhatsApp_Image_2026-05-05_at_10.58.46_editada.png",
-    "nombre": "MARÍA PAULA",
-    "numero": "11",
-    "texto": "Cumple 22 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "WhatsApp_Image_2026-05-05_at_10.59.40_editada.png",
-    "nombre": "JOHN CARLOS",
-    "numero": "12",
-    "texto": "Cumple 57 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "WhatsApp_Image_2026-05-05_at_10.59.53_editada.png",
-    "nombre": "RAÚL, TARRAGONA",
-    "numero": "13",
-    "texto": "Cumple 45 años",
+    "texto": "Cumple 9 años",
     "tipo": "FOTO"
   }
 ]

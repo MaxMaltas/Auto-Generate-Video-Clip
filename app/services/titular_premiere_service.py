@@ -190,31 +190,31 @@ SECTION_CONFIGS: dict[str, dict] = {
     "BOLETINES": {
         "zoom_start":    1.61, "zoom_end":    2.11,
         "center_x":      0.019, "center_y":  0.0,
-        "color_opacity": 0.50,
+        "color_opacity": 0.70,
         "text_y_ratio":  0.62,
     },
     "SUCESOS": {
         "zoom_start":    1.61, "zoom_end":    2.11,
         "center_x":      0.019, "center_y":  0.0,
-        "color_opacity": 0.50,
+        "color_opacity": 0.70,
         "text_y_ratio":  0.62,
     },
     "PROTAS": {
         "zoom_start":    1.61, "zoom_end":    2.11,
         "center_x":      0.019, "center_y":  0.0,
-        "color_opacity": 0.50,
+        "color_opacity": 0.70,
         "text_y_ratio":  0.62,
     },
     "INFO": {
         "zoom_start":    1.61, "zoom_end":    2.11,
         "center_x":      0.019, "center_y":  0.0,
-        "color_opacity": 0.50,
+        "color_opacity": 0.70,
         "text_y_ratio":  0.62,
     },
     "DEPORTES": {
         "zoom_start":    1.61, "zoom_end":    2.11,
         "center_x":      0.019, "center_y":  0.0,
-        "color_opacity": 0.50,
+        "color_opacity": 0.70,
         "text_y_ratio":  0.62,
     },
 }

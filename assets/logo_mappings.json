@@ -1,19 +1,166 @@
 {
-  "_logo_heights": {
-    "LASEXTA HORIZONTAL_NEG.png": 60,
-    "LASEXTA_2024_NEG.png": 60
-  },
-  "aztecaguerrero": "TV AZTECA_NEG.png",
-  "cmmedia": "CMM_NEG.png",
-  "diariodealmeria": "DIARIO ALMERIA.png",
-  "diariodemallorca": "DIARIO MALLORCA.png",
-  "diariodevalladolid": "DIARIO DE VALLADOLID_NEG.png",
-  "elcorreo": "EL CORREO_NEG.png",
-  "eldebate": "EL DEBATE_NEG.png",
-  "eldia": "EL DIA LA OPINION DE TENERIFE_NEG.png",
-  "epe": "EL PERIODICO DE ESPANA HORIZONTAL.png",
-  "es": "ARA_NEG.png",
-  "huffingtonpost": "EL HUFFPOST_NEG.png",
-  "lasexta": "LASEXTA_2024_NEG.png",
-  "segre": "SEGRE_NEG.png"
+  "20minutos": [
+    "20 MINUTOS_NEG.png",
+    55
+  ],
+  "amp": [
+    "MARCA_NEG.png",
+    null
+  ],
+  "aztecaguerrero": [
+    "TV AZTECA_NEG.png",
+    null
+  ],
+  "cadenaser": [
+    "CADENA SER_NEG.png",
+    60
+  ],
+  "canalextremadura": [
+    "CANAL EXTREMADURA_NEG.png",
+    60
+  ],
+  "canarias7": [
+    "CANARIAS 7_NEG.png",
+    62
+  ],
+  "cmmedia": [
+    "CMM_NEG.png",
+    null
+  ],
+  "cnnespanol": [
+    "CNN ESP_NEG.png",
+    90
+  ],
+  "diariodealmeria": [
+    "DIARIO ALMERIA.png",
+    null
+  ],
+  "diariodeavisos": [
+    "DIARIO DE AVISOS_NEG.png",
+    55
+  ],
+  "diariodemallorca": [
+    "DIARIO DE MALLORCA_NEG.png",
+    55
+  ],
+  "diariodesevilla": [
+    "DIARIO DE SEVILLA_NEG.png",
+    65
+  ],
+  "diariodevalladolid": [
+    "DIARIO DE VALLADOLID_NEG.png",
+    null
+  ],
+  "elcorreo": [
+    "EL CORREO_NEG.png",
+    null
+  ],
+  "eldebate": [
+    "EL DEBATE_NEG.png",
+    null
+  ],
+  "eldia": [
+    "EL DIA LA OPINION DE TENERIFE_NEG.png",
+    60
+  ],
+  "eldiario": [
+    "EL DIARIO.png",
+    55
+  ],
+  "elpais": [
+    "EL PAIS_NEG.png",
+    55
+  ],
+  "elperiodic": [
+    "EL PERIODICO DE ESPANA HORIZONTAL.png",
+    55
+  ],
+  "elperiodicoextremadura": [
+    "EL PERIODICO EXTREMADURA_NEG.png",
+    55
+  ],
+  "elperiodicomediterraneo": [
+    "EL PERIODICO MEDITERRANEO_NEG.png",
+    55
+  ],
+  "epe": [
+    "EL PERIODICO DE ESPANA HORIZONTAL.png",
+    null
+  ],
+  "es": [
+    "ARA_NEG.png",
+    null
+  ],
+  "fusernews": [
+    "FUSER_NEWS.png",
+    60
+  ],
+  "hola": [
+    "HOLA_NEG.png",
+    6
+  ],
+  "huffingtonpost": [
+    "EL HUFFPOST_NEG.png",
+    null
+  ],
+  "infobae": [
+    "INFOBAE_NEG.png",
+    6
+  ],
+  "laopiniondemalaga": [
+    "LA OPINION DE MALAGA_NEG.png",
+    55
+  ],
+  "laopiniondezamora": [
+    "LA OPINION EL CORREO DE ZAMORA_NEG.png",
+    65
+  ],
+  "lasexta": [
+    "LASEXTA_2024_NEG.png",
+    65
+  ],
+  "lavanguardia": [
+    "LA VANGUARDIA_NEG.png",
+    50
+  ],
+  "levante-emv": [
+    "LEVANTE_NEG.png",
+    65
+  ],
+  "libertaddigital": [
+    "LIBERTAD DIGITAL_NEG.png",
+    55
+  ],
+  "lne": [
+    "LA NUEVA ESPANA_NEG.png",
+    55
+  ],
+  "malagahoy": [
+    "MALAGA HOY_NEG.png",
+    55
+  ],
+  "okdiario": [
+    "OKDIARIO_NEG.png",
+    55
+  ],
+  "ondacero": [
+    "ONDA CERO_NEG.png",
+    80
+  ],
+  "segre": [
+    "SEGRE_NEG.png",
+    52
+  ],
+  "swissinfo": [
+    "SWI SWISSINFO.CH_NEG.png",
+    57
+  ],
+  "ultimahora": [
+    "ULTIMA HORA_NEG.png",
+    55
+  ],
+  "upsocl": [
+    "UPSOCL.png",
+    null
+  ]
 }
