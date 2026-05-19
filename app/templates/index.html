@@ -865,8 +865,8 @@ function tPreviewMetrics(item) {
   const photoScale = item.photo_scale != null ? item.photo_scale : 1;
   return {
     textTopPct,
-    fontPct: (fontPx / 1080) * 100,
-    letterPct: (letterPx / 1920) * 100,
+    fontPx,
+    letterPx,
     logoHeightPct: (logoPx / 1080) * 100,
     logoTopPct: Math.max(0, (textTopPct - 2.5) - ((logoPx / 1080) * 100)),
     colorOpacity,
@@ -882,7 +882,7 @@ function tRenderLivePreview(item) {
     <div class="t-preview-layer"><img class="t-preview-image" src="${tBuildAssetUrl('degradado', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
     <div class="t-preview-layer t-preview-color-layer" style="opacity:${m.colorOpacity}"><img class="t-preview-color" src="${tBuildAssetUrl('color', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
     <div class="t-preview-layer"><img class="t-preview-section" src="${tBuildAssetUrl('section', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
-    <div class="t-preview-text" style="top:${m.textTopPct.toFixed(2)}%;font-size:${m.fontPct.toFixed(3)}%;letter-spacing:${m.letterPct.toFixed(3)}%">${(item.titular||'').replace(/</g,'&lt;')}</div>
+    <div class="t-preview-text" style="top:${m.textTopPct.toFixed(2)}%">${(item.titular||'').replace(/</g,'&lt;')}</div>
     ${item.logo_file ? `<img class="t-preview-logo" src="${tBuildLogoUrl(item.logo_file)}" style="top:${m.logoTopPct.toFixed(2)}%;height:${m.logoHeightPct.toFixed(3)}%" alt="Logo" onerror="this.style.display='none'">` : ''}
   </div>`;
 }
@@ -898,8 +898,10 @@ function tUpdateLivePreview(id) {
   const text = root.querySelector('.t-preview-text');
   if (text) {
     text.style.top = `${m.textTopPct.toFixed(2)}%`;
-    text.style.fontSize = `${m.fontPct.toFixed(3)}%`;
-    text.style.letterSpacing = `${m.letterPct.toFixed(3)}%`;
+    const previewHeight = root.clientHeight || 0;
+    const previewWidth = root.clientWidth || 0;
+    if (previewHeight > 0) text.style.fontSize = `${(previewHeight * (m.fontPx / 1080)).toFixed(2)}px`;
+    if (previewWidth > 0) text.style.letterSpacing = `${(previewWidth * (m.letterPx / 1920)).toFixed(2)}px`;
     text.textContent = item.titular || '';
   }
   const colorLayer = root.querySelector('.t-preview-color-layer');
@@ -1040,7 +1042,14 @@ function tRender() {
       </div>
     </div>
   `).join('');
+  tRefreshAllLivePreviews();
 }
+
+function tRefreshAllLivePreviews() {
+  tLista.forEach(item => tUpdateLivePreview(item.id));
+}
+
+window.addEventListener('resize', tRefreshAllLivePreviews);
 
 function tCanPreview(item) {
   return !!((item?.titular || '').trim() && (item?.imagen || '').trim());
