@@ -63,6 +63,10 @@
     "EL DIA LA OPINION DE TENERIFE_NEG.png",
     60
   ],
+  "eldiadevalladolid": [
+    "EL DIA DE VALLADOLID_NEG.png",
+    59
+  ],
   "eldiario": [
     "EL DIARIO.png",
     55
@@ -117,7 +121,7 @@
   ],
   "lasexta": [
     "LASEXTA_2024_NEG.png",
-    65
+    69
   ],
   "lavanguardia": [
     "LA VANGUARDIA_NEG.png",
@@ -153,7 +157,7 @@
   ],
   "swissinfo": [
     "SWI SWISSINFO.CH_NEG.png",
-    57
+    62
   ],
   "ultimahora": [
     "ULTIMA HORA_NEG.png",

@@ -258,6 +258,14 @@ def _clamp_opacity(value: object, default: float = 0.88) -> float:
     return max(0.0, min(1.0, opacity))
 
 
+def _clamp_photo_scale(value: object, default: float = 1.0) -> float:
+    try:
+        scale = float(value)
+    except (TypeError, ValueError):
+        scale = default
+    return max(0.5, min(2.0, scale))
+
+
 def _item_color_opacity(item: dict, config: dict) -> float:
     default = config.get("color_opacity", 0.88)
     value = item.get("color_opacity")
@@ -275,6 +283,7 @@ def iniciar_generacion(
     letter_spacing: int = -2,
     color_opacity: float | None = None,
     logo_width: int | None = None,
+    photo_scale: float = 1.0,
 ) -> bool:
     with _lock:
         if _estado["running"]:
@@ -283,7 +292,7 @@ def iniciar_generacion(
     threading.Thread(
         target=_run_generar,
         args=(titular, imagen_filename, numero, seccion, logo_file, source_url,
-              font_size, letter_spacing, color_opacity, logo_width),
+                font_size, letter_spacing, color_opacity, logo_width, photo_scale),
         daemon=True,
     ).start()
     return True
@@ -607,6 +616,7 @@ def _build_ffmpeg_cmd(
     first_line_y:     int   = 0,
     color_opacity:    float | None = None,
     logo_width:       int   = LOGO_HEIGHT,
+    photo_scale:      float = 1.0,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
     cmd = ["ffmpeg", "-y"]
@@ -656,8 +666,13 @@ def _build_ffmpeg_cmd(
     flt: list[str] = []
 
     # Step 1 – Scale photo to 1920×1080 (cover + centre crop)
+
+    photo_scale = _clamp_photo_scale(photo_scale, 1.0)
+    scale_w = int(WIDTH * photo_scale)
+    scale_h = int(HEIGHT * photo_scale)
+
     flt.append(
-        f"[0:v]scale={WIDTH}:{HEIGHT}:force_original_aspect_ratio=increase,"
+        f"[0:v]scale={scale_w}:{scale_h}:force_original_aspect_ratio=increase,"
         f"crop={WIDTH}:{HEIGHT}:(in_w-out_w)/2:(in_h-out_h)/2,"
         f"fps={FPS},"
         f"setsar=1,"
@@ -751,7 +766,7 @@ def _build_ffmpeg_cmd(
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Each entry: { id, titular, imagen, seccion, logo_file, source_url,
-#               font_size, letter_spacing, color_opacity, preview }
+#               font_size, letter_spacing, color_opacity, photo_scale, preview }
 _titulares_list: list[dict] = []
 _titulares_lock = threading.Lock()
 
@@ -788,6 +803,7 @@ def generar_preview(item: dict) -> dict:
         letter_spacing = int(_ls) if _ls is not None else -2
         _lw            = item.get("logo_width")
         logo_width     = int(_lw) if _lw else None
+        photo_scale     = _clamp_photo_scale(item.get("photo_scale"), 1.0)
 
         config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
         color_opacity = _item_color_opacity(item, config)
@@ -802,7 +818,8 @@ def generar_preview(item: dict) -> dict:
                 with Image.open(foto_path) as foto:
                     foto = foto.convert("RGBA")
                     # cover + centre crop
-                    scale = max(WIDTH / foto.width, HEIGHT / foto.height)
+                    base_scale = max(WIDTH / foto.width, HEIGHT / foto.height)
+                    scale = base_scale * photo_scale
                     new_w = int(foto.width  * scale)
                     new_h = int(foto.height * scale)
                     foto  = foto.resize((new_w, new_h), Image.Resampling.LANCZOS)
@@ -881,6 +898,8 @@ def _generar_clip_item(
     font_size = int(font_size_raw) if font_size_raw not in (None, "") else None
     logo_width_raw = item.get("logo_width")
     logo_width = int(logo_width_raw) if logo_width_raw else None
+    photo_scale = _clamp_photo_scale(item.get("photo_scale"), 1.0)
+    
 
     if not titular:
         raise ValueError("Titular vacío")
@@ -928,7 +947,7 @@ def _generar_clip_item(
     _estado["log"].append(f"→ [01 TIT] Construyendo pipeline FFmpeg...")
     cmd = _build_ffmpeg_cmd(
         foto_path, text_png, config, assets, salida,
-        first_line_y, color_opacity, logo_width,
+        first_line_y, color_opacity, logo_width, photo_scale,
     )
 
     _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
@@ -952,6 +971,7 @@ def _run_generar(
     letter_spacing: int = -2,
     color_opacity: float | None = None,
     logo_width: int | None = None,
+    photo_scale: float = 1.0,
 ) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
     try:
@@ -966,6 +986,7 @@ def _run_generar(
                 "letter_spacing": letter_spacing,
                 "color_opacity": color_opacity,
                 "logo_width": logo_width,
+                "photo_scale": photo_scale,
             },
             numero,
         )

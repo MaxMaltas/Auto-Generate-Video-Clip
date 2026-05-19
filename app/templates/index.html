@@ -942,6 +942,16 @@ function tRender() {
               : `<div class="t-preview-empty">${item.imagen ? 'Genera un preview para ver la composición' : 'Sube una imagen para poder generar el preview'}</div>`
             }
           </div>
+          <div>
+            <h3>Tamaño foto</h3>
+            <input type="range" min="1" max="2" step="0.01"
+              value="${item.photo_scale != null ? item.photo_scale : 1.0}"
+              oninput="tUpdate(${item.id},'photo_scale',parseFloat(this.value));this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2) + 'x'"
+              style="width:100%;accent-color:var(--accent)">
+            <div style="font-size:12px;color:var(--muted);text-align:center">
+              ${((item.photo_scale != null ? item.photo_scale : 1.0)).toFixed(2)}x
+            </div>
+          </div>
           <!-- Añadir un input de rango para ajustar tamaño de la imagen en el preview, que modifique el valor de font_size para ese item -->
         </div>
       </div>
@@ -1040,8 +1050,17 @@ function tRemove(id) {
 
 function tAddEmpty() {
   tLista.unshift({
-    id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
-    logo_file: null, font_size: null, letter_spacing: -2, color_opacity: tDefaultColorOpacity('SUCESOS'), preview: null,
+  id: tNextId++,
+  titular: '',
+  imagen: '',
+  source_url: '',
+  seccion: 'SUCESOS',
+  logo_file: null,
+  font_size: null,
+  letter_spacing: -2,
+  color_opacity: tDefaultColorOpacity('SUCESOS'),
+  photo_scale: 1.0,
+  preview: null,
   });
   tRender();
 }
@@ -1126,6 +1145,7 @@ async function titularesExtraer() {
       font_size: null,
       letter_spacing: -2,
       color_opacity: tDefaultColorOpacity('SUCESOS'),
+      photo_scale: 1.0,
       preview: null,
     });
     tRender();
@@ -1165,6 +1185,7 @@ async function tPreview(id, opts = {}) {
         font_size:      item.font_size  || null,
         letter_spacing: item.letter_spacing || -2,
         color_opacity: item.color_opacity != null ? item.color_opacity : tDefaultColorOpacity(item.seccion),
+        photo_scale: item.photo_scale != null ? item.photo_scale : 1.0,
         logo_width:     item.logo_width || null,
       }),
     });
@@ -1196,6 +1217,7 @@ function tBuildPayload(item, numero) {
     font_size: item.font_size || null,
     letter_spacing: item.letter_spacing || -2,
     color_opacity: item.color_opacity != null ? item.color_opacity : tDefaultColorOpacity(item.seccion),
+    photo_scale: item.photo_scale != null ? item.photo_scale : 1.0,
     logo_width: item.logo_width || null,
   };
 }
