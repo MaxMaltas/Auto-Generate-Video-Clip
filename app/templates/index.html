@@ -62,7 +62,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .t-preview-image{width:100%;height:100%;object-fit:cover}
 .t-preview-color{width:100%;height:100%;object-fit:cover}
 .t-preview-section{width:100%;height:100%;object-fit:cover}
-.t-preview-text{position:absolute;left:14.446%;right:7%;color:#fff;font-weight:800;line-height:1.02;text-shadow:2px 2px 8px rgba(0,0,0,.9);word-break:break-word;overflow-wrap:anywhere}
+.t-preview-text{position:absolute;left:14.446%;right:7%;color:#fff;font-weight:800;line-height:1.02;text-shadow:2px 2px 8px rgba(0,0,0,.9);word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap}
 .t-preview-logo{position:absolute;left:14.446%;width:auto;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))}
 .t-preview-empty{height:100%;width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;padding:1rem;text-align:center}
 #tab-titulares{max-width:1500px}
@@ -821,6 +821,7 @@ async function tCargarSecciones() {
       tSectionConfigs = data.configs || {};
     }
     tRender();
+  tUpdateLivePreview(id);
   } catch(e) { /* silencioso */ }
 }
 
@@ -853,24 +854,74 @@ function tBuildAssetUrl(kind, seccion) {
   return `/titulares/asset/${kind}/${encodeURIComponent(seccion)}`;
 }
 
-function tRenderLivePreview(item) {
-  if (!item.imagen) return `<div class="t-preview-empty">Sube una imagen para ver la composición</div>`;
+function tPreviewMetrics(item) {
   const cfg = tSectionConfigs[item.seccion] || {};
-  const textY = ((cfg.text_y_ratio != null ? Number(cfg.text_y_ratio) : 0.62) * 100).toFixed(2);
-  const fontSize = item.font_size || 100;
-  const letterSpacing = (item.letter_spacing != null ? item.letter_spacing : -2);
-  const logoHeight = item.logo_width || 50;
-  const logoTop = Math.max(0, (parseFloat(textY) - 2.5) - ((logoHeight / 1080) * 100));
+  const textTopPct = ((cfg.text_y_ratio != null ? Number(cfg.text_y_ratio) : 0.62) * 100);
+  const fontPx = item.font_size || 100;
+  const letterPx = (item.letter_spacing != null ? item.letter_spacing : -2);
+  const logoPx = item.logo_width || 50;
   const colorOpacity = (item.color_opacity != null ? item.color_opacity : tDefaultColorOpacity(item.seccion));
   const photoScale = item.photo_scale != null ? item.photo_scale : 1;
-  return `<div class="t-live-preview" style="--photo-scale:${photoScale}">
+  return {
+    textTopPct,
+    fontPct: (fontPx / 1080) * 100,
+    letterPct: (letterPx / 1920) * 100,
+    logoHeightPct: (logoPx / 1080) * 100,
+    logoTopPct: Math.max(0, (textTopPct - 2.5) - ((logoPx / 1080) * 100)),
+    colorOpacity,
+    photoScale,
+  };
+}
+
+function tRenderLivePreview(item) {
+  if (!item.imagen) return `<div class="t-preview-empty">Sube una imagen para ver la composición</div>`;
+  const m = tPreviewMetrics(item);
+  return `<div class="t-live-preview" data-live-preview-id="${item.id}" style="--photo-scale:${m.photoScale}">
     <div class="t-preview-layer"><img class="t-preview-photo" src="${tBuildImageUrl(item.imagen)}" alt="Foto titular" loading="lazy"></div>
     <div class="t-preview-layer"><img class="t-preview-image" src="${tBuildAssetUrl('degradado', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
-    <div class="t-preview-layer" style="opacity:${colorOpacity}"><img class="t-preview-color" src="${tBuildAssetUrl('color', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
+    <div class="t-preview-layer t-preview-color-layer" style="opacity:${m.colorOpacity}"><img class="t-preview-color" src="${tBuildAssetUrl('color', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
     <div class="t-preview-layer"><img class="t-preview-section" src="${tBuildAssetUrl('section', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
-    <div class="t-preview-text" style="top:${textY}%;font-size:${fontSize}px;letter-spacing:${letterSpacing}px">${(item.titular||'').replace(/</g,'&lt;')}</div>
-    ${item.logo_file ? `<img class="t-preview-logo" src="${tBuildLogoUrl(item.logo_file)}" style="top:${logoTop.toFixed(2)}%;height:${logoHeight}px" alt="Logo" onerror="this.style.display='none'">` : ''}
+    <div class="t-preview-text" style="top:${m.textTopPct.toFixed(2)}%;font-size:${m.fontPct.toFixed(3)}%;letter-spacing:${m.letterPct.toFixed(3)}%">${(item.titular||'').replace(/</g,'&lt;')}</div>
+    ${item.logo_file ? `<img class="t-preview-logo" src="${tBuildLogoUrl(item.logo_file)}" style="top:${m.logoTopPct.toFixed(2)}%;height:${m.logoHeightPct.toFixed(3)}%" alt="Logo" onerror="this.style.display='none'">` : ''}
   </div>`;
+}
+
+function tUpdateLivePreview(id) {
+  const item = tLista.find(i=>i.id===id);
+  const root = document.querySelector(`[data-live-preview-id="${id}"]`);
+  if (!item || !root) return;
+  const m = tPreviewMetrics(item);
+  root.style.setProperty('--photo-scale', String(m.photoScale));
+  const photo = root.querySelector('.t-preview-photo');
+  if (photo && item.imagen) photo.src = tBuildImageUrl(item.imagen);
+  const text = root.querySelector('.t-preview-text');
+  if (text) {
+    text.style.top = `${m.textTopPct.toFixed(2)}%`;
+    text.style.fontSize = `${m.fontPct.toFixed(3)}%`;
+    text.style.letterSpacing = `${m.letterPct.toFixed(3)}%`;
+    text.textContent = item.titular || '';
+  }
+  const colorLayer = root.querySelector('.t-preview-color-layer');
+  if (colorLayer) colorLayer.style.opacity = String(m.colorOpacity);
+  const color = root.querySelector('.t-preview-color');
+  if (color) color.src = tBuildAssetUrl('color', item.seccion);
+  const section = root.querySelector('.t-preview-section');
+  if (section) section.src = tBuildAssetUrl('section', item.seccion);
+  const degradado = root.querySelector('.t-preview-image');
+  if (degradado) degradado.src = tBuildAssetUrl('degradado', item.seccion);
+  let logo = root.querySelector('.t-preview-logo');
+  if (item.logo_file) {
+    if (!logo) {
+      root.insertAdjacentHTML('beforeend', `<img class="t-preview-logo" alt="Logo" onerror="this.style.display='none'">`);
+      logo = root.querySelector('.t-preview-logo');
+    }
+    logo.style.display = '';
+    logo.src = tBuildLogoUrl(item.logo_file);
+    logo.style.top = `${m.logoTopPct.toFixed(2)}%`;
+    logo.style.height = `${m.logoHeightPct.toFixed(3)}%`;
+  } else if (logo) {
+    logo.remove();
+  }
 }
 
 function tLogoOptions(selected) {
@@ -1026,12 +1077,13 @@ function tSectionChange(id, value) {
   tRender();
 }
 
+
 function tUpdate(id, key, value) {
   const item = tLista.find(i=>i.id===id);
   if (item) {
     item[key] = value;
     item.preview = null;
-    tRender();
+    tUpdateLivePreview(id);
     // Persist logo height whenever the size field changes
     // (item.logo_width stores the logo height in px, named historically)
     if (key === 'logo_width' && item.source_url && item.logo_file) {
@@ -1072,10 +1124,12 @@ async function tLogoChange(id, logoFile) {
   tRender();
 }
 
+
 function tRemove(id) {
   tLista = tLista.filter(i=>i.id!==id);
   tRender();
 }
+
 
 function tAddEmpty() {
   tLista.unshift({
@@ -1084,6 +1138,7 @@ function tAddEmpty() {
   });
   tRender();
 }
+
 
 async function tUploadImage(id, input) {
   const item = tLista.find(i => i.id === id);
@@ -1103,7 +1158,7 @@ async function tUploadImage(id, input) {
 
     item.imagen = d.filename || file.name.replace(/^.*[\\/]/, '');
     item.preview = null;
-    tRender();
+    tUpdateLivePreview(id);
     tRender();
     showToast('Imagen añadida al titular');
   } catch (e) {
