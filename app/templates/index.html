@@ -55,8 +55,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .preview-card .actions{padding:0 .75rem .75rem;display:flex;gap:6px}
 .t-headline-card{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:1.5rem;align-items:start}
 .t-headline-side{display:flex;flex-direction:column;gap:.5rem;min-height:100%}
-.t-preview-frame{flex:1;aspect-ratio:16/9;border:1px solid var(--border);border-radius:8px;background:#111;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.t-preview-frame img{width:100%;height:100%;object-fit:contain;display:block;background:#111}
+.t-preview-frame{flex:1;aspect-ratio:16/9;border:1px solid var(--border);border-radius:8px;background:#111;overflow:hidden;position:relative}
+.t-live-preview{position:relative;width:100%;height:100%;background:#111;overflow:hidden}
+.t-preview-layer{position:absolute;inset:0;pointer-events:none}
+.t-preview-photo{width:100%;height:100%;object-fit:cover;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--photo-scale,1));transform-origin:center center}
+.t-preview-image{width:100%;height:100%;object-fit:cover}
+.t-preview-color{width:100%;height:100%;object-fit:cover}
+.t-preview-section{width:100%;height:100%;object-fit:cover}
+.t-preview-text{position:absolute;left:14.446%;right:7%;color:#fff;font-weight:800;line-height:1.02;text-shadow:2px 2px 8px rgba(0,0,0,.9);word-break:break-word;overflow-wrap:anywhere}
+.t-preview-logo{position:absolute;left:14.446%;width:auto;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))}
 .t-preview-empty{height:100%;width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;padding:1rem;text-align:center}
 #tab-titulares{max-width:1500px}
 .row{display:flex;gap:1rem;align-items:center}
@@ -796,10 +803,6 @@ function tAddToTop(item) {
   // Inserta siempre los nuevos titulares al inicio de la pila (posición 0)
   tLista.unshift(item);
 }
-const tAutoPreviewDelayMs = 350;
-const tPreviewTimers = new Map();      // id -> timeout
-const tPreviewInFlight = new Set();    // ids con petición activa
-const tPreviewPending = new Set();     // ids con cambios durante petición activa
 
 async function tCargarLogos() {
   if (tLogos.length) return;
@@ -832,6 +835,42 @@ function tDefaultColorOpacity(seccion) {
 
 function tColorOpacity(item) {
   return item.color_opacity != null ? parseFloat(item.color_opacity) : tDefaultColorOpacity(item.seccion);
+}
+
+
+function tBuildLogoUrl(filename) {
+  if (!filename) return '';
+  return `/titulares/asset/logo/${encodeURIComponent(filename)}`;
+}
+
+function tBuildImageUrl(filename) {
+  if (!filename) return '';
+  return `/titulares/thumb/${encodeURIComponent(filename)}`;
+}
+
+function tBuildAssetUrl(kind, seccion) {
+  if (!seccion) return '';
+  return `/titulares/asset/${kind}/${encodeURIComponent(seccion)}`;
+}
+
+function tRenderLivePreview(item) {
+  if (!item.imagen) return `<div class="t-preview-empty">Sube una imagen para ver la composición</div>`;
+  const cfg = tSectionConfigs[item.seccion] || {};
+  const textY = ((cfg.text_y_ratio != null ? Number(cfg.text_y_ratio) : 0.62) * 100).toFixed(2);
+  const fontSize = item.font_size || 100;
+  const letterSpacing = (item.letter_spacing != null ? item.letter_spacing : -2);
+  const logoHeight = item.logo_width || 50;
+  const logoTop = Math.max(0, (parseFloat(textY) - 2.5) - ((logoHeight / 1080) * 100));
+  const colorOpacity = (item.color_opacity != null ? item.color_opacity : tDefaultColorOpacity(item.seccion));
+  const photoScale = item.photo_scale != null ? item.photo_scale : 1;
+  return `<div class="t-live-preview" style="--photo-scale:${photoScale}">
+    <div class="t-preview-layer"><img class="t-preview-photo" src="${tBuildImageUrl(item.imagen)}" alt="Foto titular" loading="lazy"></div>
+    <div class="t-preview-layer"><img class="t-preview-image" src="${tBuildAssetUrl('degradado', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
+    <div class="t-preview-layer" style="opacity:${colorOpacity}"><img class="t-preview-color" src="${tBuildAssetUrl('color', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
+    <div class="t-preview-layer"><img class="t-preview-section" src="${tBuildAssetUrl('section', item.seccion)}" alt="" onerror="this.style.display='none'"></div>
+    <div class="t-preview-text" style="top:${textY}%;font-size:${fontSize}px;letter-spacing:${letterSpacing}px">${(item.titular||'').replace(/</g,'&lt;')}</div>
+    ${item.logo_file ? `<img class="t-preview-logo" src="${tBuildLogoUrl(item.logo_file)}" style="top:${logoTop.toFixed(2)}%;height:${logoHeight}px" alt="Logo" onerror="this.style.display='none'">` : ''}
+  </div>`;
 }
 
 function tLogoOptions(selected) {
@@ -887,7 +926,7 @@ function tRender() {
           </div>
 
           <!-- Ajustes de texto -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.75rem;margin-top:.75rem;align-items:end">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:.75rem;margin-top:.75rem;align-items:end">
             <div>
               <h3>Tamaño texto (px)</h3>
               <input type="number" min="20" max="200" placeholder="100"
@@ -916,6 +955,14 @@ function tRender() {
                 oninput="tUpdate(${item.id},'logo_width',this.value?parseInt(this.value):null)"
                 style="width:100%">
             </div>
+            <div>
+              <h3>Zoom foto</h3>
+              <input type="range" min="1" max="2.5" step="0.01"
+                value="${item.photo_scale||1}"
+                oninput="tUpdate(${item.id},'photo_scale',parseFloat(this.value));this.nextElementSibling.textContent=parseFloat(this.value).toFixed(2)"
+                style="width:100%;accent-color:var(--accent)">
+              <div style="font-size:12px;color:var(--muted);text-align:center">${(item.photo_scale||1).toFixed(2)}</div>
+            </div>
           </div>
 
           <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
@@ -936,13 +983,7 @@ function tRender() {
             : ''
           }
           <h3 style="margin-top:.25rem">Preview</h3>
-          <div class="t-preview-frame">
-            ${item.preview
-              ? `<img src="/titulares/pm-thumb/${encodeURIComponent(item.preview)}?t=${Date.now()}" alt="Preview del titular">`
-              : `<div class="t-preview-empty">${item.imagen ? 'Genera un preview para ver la composición' : 'Sube una imagen para poder generar el preview'}</div>`
-            }
-          </div>
-          <!-- Añadir un input de rango para ajustar tamaño de la imagen en el preview, que modifique el valor de font_size para ese item -->
+          <div class="t-preview-frame">${tRenderLivePreview(item)}</div>
         </div>
       </div>
     </div>
@@ -970,7 +1011,7 @@ function tSchedulePreview(id, delay = tAutoPreviewDelayMs) {
 
     if (tPreviewPending.has(id)) {
       tPreviewPending.delete(id);
-      tSchedulePreview(id, 120);
+      tRender();
     }
   }, delay);
   tPreviewTimers.set(id, timer);
@@ -983,7 +1024,6 @@ function tSectionChange(id, value) {
   item.color_opacity = tDefaultColorOpacity(value);
   item.preview = null;
   tRender();
-  tSchedulePreview(id);
 }
 
 function tUpdate(id, key, value) {
@@ -991,7 +1031,7 @@ function tUpdate(id, key, value) {
   if (item) {
     item[key] = value;
     item.preview = null;
-    tSchedulePreview(id);
+    tRender();
     // Persist logo height whenever the size field changes
     // (item.logo_width stores the logo height in px, named historically)
     if (key === 'logo_width' && item.source_url && item.logo_file) {
@@ -1030,7 +1070,6 @@ async function tLogoChange(id, logoFile) {
     } catch(e) { /* silencioso */ }
   }
   tRender();
-  tSchedulePreview(id, 120);
 }
 
 function tRemove(id) {
@@ -1041,7 +1080,7 @@ function tRemove(id) {
 function tAddEmpty() {
   tLista.unshift({
     id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
-    logo_file: null, font_size: null, letter_spacing: -2, color_opacity: tDefaultColorOpacity('SUCESOS'), preview: null,
+    logo_file: null, font_size: null, letter_spacing: -2, color_opacity: tDefaultColorOpacity('SUCESOS'), photo_scale: 1, preview: null,
   });
   tRender();
 }
@@ -1065,7 +1104,7 @@ async function tUploadImage(id, input) {
     item.imagen = d.filename || file.name.replace(/^.*[\\/]/, '');
     item.preview = null;
     tRender();
-    tSchedulePreview(id, 120);
+    tRender();
     showToast('Imagen añadida al titular');
   } catch (e) {
     showToast('Error de conexión al subir la imagen', true);
@@ -1126,6 +1165,7 @@ async function titularesExtraer() {
       font_size: null,
       letter_spacing: -2,
       color_opacity: tDefaultColorOpacity('SUCESOS'),
+      photo_scale: 1,
       preview: null,
     });
     tRender();
