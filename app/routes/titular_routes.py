@@ -161,6 +161,31 @@ def pm_thumb(nombre):
 
 # ── Logo management ───────────────────────────────────────────────────────────
 
+
+
+@titular_bp.route("/titulares/asset/<kind>/<seccion>")
+def titulares_asset(kind, seccion):
+    allowed_kinds = {"color", "section", "degradado"}
+    if kind not in allowed_kinds:
+        abort(404)
+    if re.search(r"[^A-Za-z0-9_\-]", seccion or ""):
+        abort(400)
+    assets = pm_svc._get_section_assets(seccion.upper(), None)
+    path = assets.get(kind)
+    if not path or not path.exists():
+        abort(404)
+    return send_file(str(path.resolve()))
+
+
+@titular_bp.route("/titulares/asset/logo/<filename>")
+def titulares_asset_logo(filename):
+    if re.search(r"[/\\]|\.\.", filename):
+        abort(400)
+    path = pm_svc.MEDIOS_DIR / filename
+    if not path.exists():
+        abort(404)
+    return send_file(str(path.resolve()))
+
 @titular_bp.route("/titulares/logos")
 def logos_list():
     return jsonify(pm_svc.get_logos_list())

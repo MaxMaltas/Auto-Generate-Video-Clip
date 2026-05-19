@@ -61,5 +61,12 @@
     "numero": "09",
     "texto": "Cumple 9 años",
     "tipo": "FOTO"
+  },
+  {
+    "numero": "10",
+    "nombre": "",
+    "texto": "",
+    "tipo": "FOTO",
+    "foto": ""
   }
 ]
