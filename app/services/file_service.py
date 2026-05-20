@@ -32,7 +32,9 @@ def list_photos():
     ])
 
 def list_clips():
-    return sorted([f.name for f in OUTPUT.glob("*.mp4")])
+    clips = [f for f in OUTPUT.glob("*.mp4") if f.is_file()]
+    clips.sort(key=lambda f: (f.stat().st_mtime, f.name.lower()), reverse=True)
+    return [f.name for f in clips]
 
 def build_clips_zip():
     buf = io.BytesIO()
