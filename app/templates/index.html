@@ -919,20 +919,6 @@ function tRender() {
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-top:.75rem;align-items:end">
             <div>
-              <h3>Escala fondo (%)</h3>
-              <input type="range" min="100" max="300" step="1" value="${Math.round((item.bg_scale || 1) * 100)}"
-                oninput="tUpdate(${item.id},'bg_scale',parseFloat(this.value)/100);this.nextElementSibling.textContent=this.value+'%'"
-                style="width:100%;accent-color:var(--accent)">
-              <div style="font-size:12px;color:var(--muted);text-align:center">${Math.round((item.bg_scale || 1) * 100)}%</div>
-            </div>
-            <div>
-              <h3>Posición fondo X</h3>
-              <input type="range" min="0" max="100" step="1" value="${item.bg_pos_x ?? 50}"
-                oninput="tUpdate(${item.id},'bg_pos_x',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'%'"
-                style="width:100%;accent-color:var(--accent)">
-              <div style="font-size:12px;color:var(--muted);text-align:center">${item.bg_pos_x ?? 50}%</div>
-            </div>
-            <div>
               <h3>Posición fondo Y</h3>
               <input type="range" min="0" max="100" step="1" value="${item.bg_pos_y ?? 50}"
                 oninput="tUpdate(${item.id},'bg_pos_y',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'%'"
@@ -965,6 +951,20 @@ function tRender() {
               : `<div class="t-preview-empty">${item.imagen ? 'Genera un preview para ver la composición' : 'Sube una imagen para poder generar el preview'}</div>`
             }
           </div>
+          <div>
+              <h3>Escala fondo (%)</h3>
+              <input type="range" min="100" max="300" step="1" value="${Math.round((item.bg_scale || 1) * 100)}"
+                oninput="tUpdate(${item.id},'bg_scale',parseFloat(this.value)/100);this.nextElementSibling.textContent=this.value+'%'"
+                style="width:100%;accent-color:var(--accent)">
+              <div style="font-size:12px;color:var(--muted);text-align:center">${Math.round((item.bg_scale || 1) * 100)}%</div>
+            </div>
+            <div>
+              <h3>Posición fondo X</h3>
+              <input type="range" min="0" max="100" step="1" value="${item.bg_pos_x ?? 50}"
+                oninput="tUpdate(${item.id},'bg_pos_x',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'%'"
+                style="width:100%;accent-color:var(--accent)">
+              <div style="font-size:12px;color:var(--muted);text-align:center">${item.bg_pos_x ?? 50}%</div>
+            </div>
           <!-- Añadir un input de rango para ajustar tamaño de la imagen en el preview, que modifique el valor de font_size para ese item -->
         </div>
       </div>
