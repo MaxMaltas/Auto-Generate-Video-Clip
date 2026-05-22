@@ -1,65 +1,93 @@
 [
   {
-    "foto": "01._PAULA_editada.png",
-    "nombre": "PAULA",
+    "foto": "01._DIANA.jpeg",
+    "nombre": "DIANA",
     "numero": "01",
-    "texto": "Cumple 18 años",
+    "texto": "Cumple 20 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "02._MAURO_editada.png",
-    "nombre": "MAURO, ZARAGOZA",
+    "foto": "02._ANDREA.jpeg",
+    "nombre": "ANDREA",
     "numero": "02",
-    "texto": "Cumple 10 años",
+    "texto": "Cumple 56 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "03._ANDREA_editada.png",
-    "nombre": "ANDREA, ALICANTE",
+    "foto": "03._ELENA.jpeg",
+    "nombre": "ELENA",
     "numero": "03",
-    "texto": "Cumple 8 años",
+    "texto": "El domingo hizo 13 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "04._JUAN_editada.png",
-    "nombre": "JUAN",
+    "foto": "04_PAULA.jpeg",
+    "nombre": "PAULA Y LAURA",
     "numero": "04",
-    "texto": "Cumple 68 años",
+    "texto": "Cumplen 15 y 46 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "05._ALEX_editada.png",
-    "nombre": "ALEX, PAMPLONA",
+    "foto": "05_AIUR.jpeg",
+    "nombre": "AIUR",
     "numero": "05",
-    "texto": "Cumple 14 años",
+    "texto": "Cumple 7 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "06._NANI_Y_RAIMON_editada.png",
-    "nombre": "NANI Y RAIMON",
+    "foto": "06_MARIA.jpeg",
+    "nombre": "MARIA",
     "numero": "06",
-    "texto": "Cumplen 50 años de casados",
+    "texto": "Cumple 65 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "07._ULISES_editada.png",
-    "nombre": "ULISES",
+    "foto": "07_MIGUEL.jpeg",
+    "nombre": "MIGUEL",
     "numero": "07",
-    "texto": "Cumple 46 años",
+    "texto": "Cumple 60 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "08._ALBER_editada.png",
-    "nombre": "ALBER",
+    "foto": "08_JUANMA.jpeg",
+    "nombre": "JUANMA, HUELVA",
     "numero": "08",
-    "texto": "Cumple 8 años",
+    "texto": "Cumple 17 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "WhatsApp_Image_2026-05-15_at_10.59.23_editada.png",
-    "nombre": "FABIÁN",
+    "foto": "09_JUAN.jpeg",
+    "nombre": "JUAN, CUNIT",
     "numero": "09",
-    "texto": "Cumple 9 años",
+    "texto": "Cumple 60 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "10_INMA.jpeg",
+    "nombre": "INMA",
+    "numero": "10",
+    "texto": "Cumple 58 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "11_LUIS.jpeg",
+    "nombre": "LUIS",
+    "numero": "11",
+    "texto": "Le han dado el alta despues de 15 dias ingresado",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "12_PAULA.jpeg",
+    "nombre": "PAULA",
+    "numero": "12",
+    "texto": "Se ha sacado el carnet de conducir",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "13_KEVIN.jpeg",
+    "nombre": "KEVIN",
+    "numero": "13",
+    "texto": "Cumple 13 años",
     "tipo": "FOTO"
   }
 ]
