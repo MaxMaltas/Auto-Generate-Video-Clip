@@ -785,7 +785,7 @@ async function procesarFoto() {
 // ── TITULARES ─────────────────────────────────────────────────────────────────
 
 // In-memory list of titular items
-// Each: { id, titular, imagen, source_url, seccion, font_size, letter_spacing, color_opacity, preview }
+// Each: { id, titular, imagen, source_url, seccion, font_size, letter_spacing, color_opacity, bg_scale, bg_pos_x, bg_pos_y, preview }
 let tLista = [];
 let tNextId = 1;
 let tLogos  = [];   // loaded once from server
@@ -917,6 +917,29 @@ function tRender() {
                 style="width:100%">
             </div>
           </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-top:.75rem;align-items:end">
+            <div>
+              <h3>Escala fondo (%)</h3>
+              <input type="range" min="100" max="300" step="1" value="${Math.round((item.bg_scale || 1) * 100)}"
+                oninput="tUpdate(${item.id},'bg_scale',parseFloat(this.value)/100);this.nextElementSibling.textContent=this.value+'%'"
+                style="width:100%;accent-color:var(--accent)">
+              <div style="font-size:12px;color:var(--muted);text-align:center">${Math.round((item.bg_scale || 1) * 100)}%</div>
+            </div>
+            <div>
+              <h3>Posición fondo X</h3>
+              <input type="range" min="0" max="100" step="1" value="${item.bg_pos_x ?? 50}"
+                oninput="tUpdate(${item.id},'bg_pos_x',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'%'"
+                style="width:100%;accent-color:var(--accent)">
+              <div style="font-size:12px;color:var(--muted);text-align:center">${item.bg_pos_x ?? 50}%</div>
+            </div>
+            <div>
+              <h3>Posición fondo Y</h3>
+              <input type="range" min="0" max="100" step="1" value="${item.bg_pos_y ?? 50}"
+                oninput="tUpdate(${item.id},'bg_pos_y',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'%'"
+                style="width:100%;accent-color:var(--accent)">
+              <div style="font-size:12px;color:var(--muted);text-align:center">${item.bg_pos_y ?? 50}%</div>
+            </div>
+          </div>
 
           <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
             <button class="btn btn-ghost" style="font-size:13px" onclick="tPreview(${item.id})">👁 Preview</button>
@@ -1041,7 +1064,8 @@ function tRemove(id) {
 function tAddEmpty() {
   tLista.unshift({
     id: tNextId++, titular: '', imagen: '', source_url: '', seccion: 'SUCESOS',
-    logo_file: null, font_size: null, letter_spacing: -2, color_opacity: tDefaultColorOpacity('SUCESOS'), preview: null,
+    logo_file: null, font_size: null, letter_spacing: -2, color_opacity: tDefaultColorOpacity('SUCESOS'),
+    bg_scale: 1.0, bg_pos_x: 50, bg_pos_y: 50, preview: null,
   });
   tRender();
 }
@@ -1126,6 +1150,9 @@ async function titularesExtraer() {
       font_size: null,
       letter_spacing: -2,
       color_opacity: tDefaultColorOpacity('SUCESOS'),
+      bg_scale: 1.0,
+      bg_pos_x: 50,
+      bg_pos_y: 50,
       preview: null,
     });
     tRender();
@@ -1166,6 +1193,9 @@ async function tPreview(id, opts = {}) {
         letter_spacing: item.letter_spacing || -2,
         color_opacity: item.color_opacity != null ? item.color_opacity : tDefaultColorOpacity(item.seccion),
         logo_width:     item.logo_width || null,
+        bg_scale:       item.bg_scale || 1.0,
+        bg_pos_x:       item.bg_pos_x ?? 50,
+        bg_pos_y:       item.bg_pos_y ?? 50,
       }),
     });
     const d = await r.json();
@@ -1197,6 +1227,9 @@ function tBuildPayload(item, numero) {
     letter_spacing: item.letter_spacing || -2,
     color_opacity: item.color_opacity != null ? item.color_opacity : tDefaultColorOpacity(item.seccion),
     logo_width: item.logo_width || null,
+    bg_scale: item.bg_scale || 1.0,
+    bg_pos_x: item.bg_pos_x ?? 50,
+    bg_pos_y: item.bg_pos_y ?? 50,
   };
 }
 
