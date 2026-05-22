@@ -56,6 +56,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .t-headline-card{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:1.5rem;align-items:start}
 .t-headline-side{display:flex;flex-direction:column;gap:.5rem;min-height:100%}
 .t-preview-frame{flex:1;aspect-ratio:16/9;border:1px solid var(--border);border-radius:8px;background:#111;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.t-preview-row{display:flex;gap:.75rem;align-items:stretch}
+.t-bg-pos-y-control{width:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;padding:.25rem 0}
+.t-bg-pos-y-control h3{margin:0;font-size:10px;text-align:center;line-height:1.2}
+.t-vertical-range{writing-mode:vertical-lr;direction:rtl;width:28px;height:100%;min-height:180px;padding:0}
+.t-bg-pos-y-value{font-size:12px;color:var(--muted);text-align:center}
 .t-preview-frame img{width:100%;height:100%;object-fit:contain;display:block;background:#111}
 .t-preview-empty{height:100%;width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;padding:1rem;text-align:center}
 #tab-titulares{max-width:1500px}
@@ -68,7 +73,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 #sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;transition:background .3s}
 #sync-dot.syncing{background:var(--yellow);animation:pulse 0.6s infinite}
 #sync-dot.remote{background:var(--accent);animation:pulse 0.8s infinite}
-@media (max-width: 900px){.t-headline-card{grid-template-columns:1fr}.t-headline-side{min-height:0}.t-preview-frame{min-height:240px;aspect-ratio:auto}}
+@media (max-width: 900px){.t-headline-card{grid-template-columns:1fr}.t-headline-side{min-height:0}.t-preview-row{flex-direction:column}.t-bg-pos-y-control{width:100%;flex-direction:row;justify-content:flex-start;align-items:center}.t-bg-pos-y-control h3{text-align:left;font-size:.75rem}.t-vertical-range{writing-mode:horizontal-tb;direction:ltr;width:100%;min-height:0;height:auto}.t-preview-frame{min-height:240px;aspect-ratio:auto}}
 
 </style>
 </head>
@@ -917,16 +922,6 @@ function tRender() {
                 style="width:100%">
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-top:.75rem;align-items:end">
-            <div>
-              <h3>Posición fondo Y</h3>
-              <input type="range" min="0" max="100" step="1" value="${item.bg_pos_y ?? 50}"
-                oninput="tUpdate(${item.id},'bg_pos_y',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'%'"
-                style="width:100%;accent-color:var(--accent)">
-              <div style="font-size:12px;color:var(--muted);text-align:center">${item.bg_pos_y ?? 50}%</div>
-            </div>
-          </div>
-
           <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
             <button class="btn btn-ghost" style="font-size:13px" onclick="tPreview(${item.id})">👁 Preview</button>
             <button class="btn btn-success" style="font-size:13px" onclick="tGenerar(${item.id})">▶ Generar (50s)</button>
@@ -945,11 +940,20 @@ function tRender() {
             : ''
           }
           <h3 style="margin-top:.25rem">Preview</h3>
-          <div class="t-preview-frame">
-            ${item.preview
-              ? `<img src="/titulares/pm-thumb/${encodeURIComponent(item.preview)}?t=${Date.now()}" alt="Preview del titular">`
-              : `<div class="t-preview-empty">${item.imagen ? 'Genera un preview para ver la composición' : 'Sube una imagen para poder generar el preview'}</div>`
-            }
+          <div class="t-preview-row">
+            <div class="t-preview-frame">
+              ${item.preview
+                ? `<img src="/titulares/pm-thumb/${encodeURIComponent(item.preview)}?t=${Date.now()}" alt="Preview del titular">`
+                : `<div class="t-preview-empty">${item.imagen ? 'Genera un preview para ver la composición' : 'Sube una imagen para poder generar el preview'}</div>`
+              }
+            </div>
+            <div class="t-bg-pos-y-control">
+              <h3>Posición fondo Y</h3>
+              <input class="t-vertical-range" type="range" min="0" max="100" step="1" value="${item.bg_pos_y ?? 50}"
+                oninput="tUpdate(${item.id},'bg_pos_y',parseFloat(this.value));this.nextElementSibling.textContent=this.value+'%'"
+                style="accent-color:var(--accent)">
+              <div class="t-bg-pos-y-value">${item.bg_pos_y ?? 50}%</div>
+            </div>
           </div>
           <div>
               <h3>Escala fondo (%)</h3>
