@@ -283,7 +283,9 @@ def iniciar_generacion(
     letter_spacing: int = -2,
     color_opacity: float | None = None,
     logo_width: int | None = None,
-    photo_scale: float = 1.0,
+    bg_scale: float = 1.0,
+    bg_pos_x: float = 50.0,
+    bg_pos_y: float = 50.0,
 ) -> bool:
     with _lock:
         if _estado["running"]:
@@ -292,7 +294,7 @@ def iniciar_generacion(
     threading.Thread(
         target=_run_generar,
         args=(titular, imagen_filename, numero, seccion, logo_file, source_url,
-                font_size, letter_spacing, color_opacity, logo_width, photo_scale),
+              font_size, letter_spacing, color_opacity, logo_width, bg_scale, bg_pos_x, bg_pos_y),
         daemon=True,
     ).start()
     return True
@@ -616,7 +618,9 @@ def _build_ffmpeg_cmd(
     first_line_y:     int   = 0,
     color_opacity:    float | None = None,
     logo_width:       int   = LOGO_HEIGHT,
-    photo_scale:      float = 1.0,
+    bg_scale:         float = 1.0,
+    bg_pos_x:         float = 50.0,
+    bg_pos_y:         float = 50.0,
 ) -> list[str]:
     dur = str(TITULAR_DURATION)
     cmd = ["ffmpeg", "-y"]
@@ -666,14 +670,12 @@ def _build_ffmpeg_cmd(
     flt: list[str] = []
 
     # Step 1 – Scale photo to 1920×1080 (cover + centre crop)
-
-    photo_scale = _clamp_photo_scale(photo_scale, 1.0)
-    scale_w = int(WIDTH * photo_scale)
-    scale_h = int(HEIGHT * photo_scale)
-
+    zoom = max(1.0, float(bg_scale))
+    pos_x = min(100.0, max(0.0, float(bg_pos_x)))
+    pos_y = min(100.0, max(0.0, float(bg_pos_y)))
     flt.append(
-        f"[0:v]scale={scale_w}:{scale_h}:force_original_aspect_ratio=increase,"
-        f"crop={WIDTH}:{HEIGHT}:(in_w-out_w)/2:(in_h-out_h)/2,"
+        f"[0:v]scale={WIDTH * zoom:.2f}:{HEIGHT * zoom:.2f}:force_original_aspect_ratio=increase,"
+        f"crop={WIDTH}:{HEIGHT}:(in_w-out_w)*{pos_x / 100:.6f}:(in_h-out_h)*{pos_y / 100:.6f},"
         f"fps={FPS},"
         f"setsar=1,"
         f"setpts=PTS-STARTPTS[photo_static]"
@@ -803,7 +805,9 @@ def generar_preview(item: dict) -> dict:
         letter_spacing = int(_ls) if _ls is not None else -2
         _lw            = item.get("logo_width")
         logo_width     = int(_lw) if _lw else None
-        photo_scale     = _clamp_photo_scale(item.get("photo_scale"), 1.0)
+        bg_scale       = max(0.1, float(item.get("bg_scale", 1.0) or 1.0))
+        bg_pos_x       = min(100.0, max(0.0, float(item.get("bg_pos_x", 50) or 50)))
+        bg_pos_y       = min(100.0, max(0.0, float(item.get("bg_pos_y", 50) or 50)))
 
         config = SECTION_CONFIGS.get(seccion, SECTION_CONFIGS["SUCESOS"])
         color_opacity = _item_color_opacity(item, config)
@@ -817,14 +821,13 @@ def generar_preview(item: dict) -> dict:
             if foto_path.exists():
                 with Image.open(foto_path) as foto:
                     foto = foto.convert("RGBA")
-                    # cover + centre crop
-                    base_scale = max(WIDTH / foto.width, HEIGHT / foto.height)
-                    scale = base_scale * photo_scale
+                    # cover + custom scale + crop position
+                    scale = max(WIDTH / foto.width, HEIGHT / foto.height) * bg_scale
                     new_w = int(foto.width  * scale)
                     new_h = int(foto.height * scale)
                     foto  = foto.resize((new_w, new_h), Image.Resampling.LANCZOS)
-                    x_off = (new_w - WIDTH)  // 2
-                    y_off = (new_h - HEIGHT) // 2
+                    x_off = int(max(0, new_w - WIDTH) * (bg_pos_x / 100.0))
+                    y_off = int(max(0, new_h - HEIGHT) * (bg_pos_y / 100.0))
                     foto  = foto.crop((x_off, y_off, x_off + WIDTH, y_off + HEIGHT))
                     canvas.paste(foto, (0, 0))
 
@@ -898,8 +901,9 @@ def _generar_clip_item(
     font_size = int(font_size_raw) if font_size_raw not in (None, "") else None
     logo_width_raw = item.get("logo_width")
     logo_width = int(logo_width_raw) if logo_width_raw else None
-    photo_scale = _clamp_photo_scale(item.get("photo_scale"), 1.0)
-    
+    bg_scale = max(0.1, float(item.get("bg_scale", 1.0) or 1.0))
+    bg_pos_x = min(100.0, max(0.0, float(item.get("bg_pos_x", 50) or 50)))
+    bg_pos_y = min(100.0, max(0.0, float(item.get("bg_pos_y", 50) or 50)))
 
     if not titular:
         raise ValueError("Titular vacío")
@@ -947,7 +951,7 @@ def _generar_clip_item(
     _estado["log"].append(f"→ [01 TIT] Construyendo pipeline FFmpeg...")
     cmd = _build_ffmpeg_cmd(
         foto_path, text_png, config, assets, salida,
-        first_line_y, color_opacity, logo_width, photo_scale,
+        first_line_y, color_opacity, logo_width, bg_scale, bg_pos_x, bg_pos_y,
     )
 
     _estado["log"].append(f"→ Renderizando {TITULAR_DURATION}s (puede tardar varios minutos)...")
@@ -971,7 +975,9 @@ def _run_generar(
     letter_spacing: int = -2,
     color_opacity: float | None = None,
     logo_width: int | None = None,
-    photo_scale: float = 1.0,
+    bg_scale: float = 1.0,
+    bg_pos_x: float = 50.0,
+    bg_pos_y: float = 50.0,
 ) -> None:
     _estado.update({"log": [], "done": 0, "errors": 0, "total": 1})
     try:
@@ -986,7 +992,9 @@ def _run_generar(
                 "letter_spacing": letter_spacing,
                 "color_opacity": color_opacity,
                 "logo_width": logo_width,
-                "photo_scale": photo_scale,
+                "bg_scale": bg_scale,
+                "bg_pos_x": bg_pos_x,
+                "bg_pos_y": bg_pos_y,
             },
             numero,
         )

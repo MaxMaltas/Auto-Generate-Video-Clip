@@ -1,142 +1,93 @@
 [
   {
-    "foto": "01_MARIA_ISABEL_editada.png",
-    "nombre": "MARIA ISABEL, TORREVIEJA",
+    "foto": "01._DIANA.jpeg",
+    "nombre": "DIANA",
     "numero": "01",
-    "texto": "Cumple 6 años",
+    "texto": "Cumple 20 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "02_BERTA_editada.png",
-    "nombre": "BERTA",
+    "foto": "02._ANDREA.jpeg",
+    "nombre": "ANDREA",
     "numero": "02",
-    "texto": "Cumple 18 años",
+    "texto": "Cumple 56 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "03_CANDELA_editada.png",
-    "nombre": "CANDELA",
+    "foto": "03._ELENA.jpeg",
+    "nombre": "ELENA",
     "numero": "03",
-    "texto": "Cumple 19 años",
+    "texto": "El domingo hizo 13 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "04_LEA_editada.png",
-    "nombre": "LEA",
+    "foto": "04_PAULA.jpeg",
+    "nombre": "PAULA Y LAURA",
     "numero": "04",
-    "texto": "Cumple 45 años",
+    "texto": "Cumplen 15 y 46 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "05_ALFONSO_editada.png",
-    "nombre": "ALFONSO",
+    "foto": "05_AIUR.jpeg",
+    "nombre": "AIUR",
     "numero": "05",
-    "texto": "Cumple 65 años",
+    "texto": "Cumple 7 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "06_JESUS_editada.png",
-    "nombre": "JESUS, SEVILLA",
+    "foto": "06_MARIA.jpeg",
+    "nombre": "MARIA",
     "numero": "06",
-    "texto": "Cumple 40 y ... (no quiere decir la edad)",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "07_TERESA_editada.png",
-    "nombre": "TERESA, CASTELLDEFELS",
-    "numero": "07",
-    "texto": "Cumple 8 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "08_ANA_ISABEL_editada.png",
-    "nombre": "ANA ISABEL",
-    "numero": "08",
-    "texto": "Cumple 67 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "09_ESTEFANIA_editada.png",
-    "nombre": "ESTEFANIA",
-    "numero": "09",
-    "texto": "El sabado cumple 7 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "10_ENEA_editada.png",
-    "nombre": "ENEA",
-    "numero": "10",
-    "texto": "Cumple 6 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "11_JAVI_Y_AMAIA_editada.png",
-    "nombre": "JAVI Y AMAIA",
-    "numero": "11",
-    "texto": "Cumplen 16 años de casados",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "12_VANE_editada.png",
-    "nombre": "VANE, PLASENCIA",
-    "numero": "12",
-    "texto": "Cumple 46 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "13_ANITA_editada.png",
-    "nombre": "ANITA, CORUÑA",
-    "numero": "13",
-    "texto": "Cumple 49 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "14_JOSE_MARIA_editada.png",
-    "nombre": "JOSE MARIA",
-    "numero": "14",
-    "texto": "",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "15_SONIA_editada.png",
-    "nombre": "SONIA",
-    "numero": "15",
-    "texto": "Cumple 47 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "16_ALBA_editada.png",
-    "nombre": "ALBA, TOSSA",
-    "numero": "16",
-    "texto": "Cumple 22 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "17_PATRICIA_Y_LAURA_editada.png",
-    "nombre": "PATRICIA Y LAURA",
-    "numero": "17",
-    "texto": "Cumplen 17 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "18_ASUN_editada.png",
-    "nombre": "ASUN",
-    "numero": "18",
     "texto": "Cumple 65 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "19_NIKOLE_editada.png",
-    "nombre": "NIKOLE",
-    "numero": "19",
-    "texto": "Cumple 18 años",
+    "foto": "07_MIGUEL.jpeg",
+    "nombre": "MIGUEL",
+    "numero": "07",
+    "texto": "Cumple 60 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "20_TEO_editada.png",
-    "nombre": "TEO",
-    "numero": "20",
-    "texto": "Cumple 70 años",
+    "foto": "08_JUANMA.jpeg",
+    "nombre": "JUANMA, HUELVA",
+    "numero": "08",
+    "texto": "Cumple 17 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "09_JUAN.jpeg",
+    "nombre": "JUAN, CUNIT",
+    "numero": "09",
+    "texto": "Cumple 60 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "10_INMA.jpeg",
+    "nombre": "INMA",
+    "numero": "10",
+    "texto": "Cumple 58 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "11_LUIS.jpeg",
+    "nombre": "LUIS",
+    "numero": "11",
+    "texto": "Le han dado el alta despues de 15 dias ingresado",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "12_PAULA.jpeg",
+    "nombre": "PAULA",
+    "numero": "12",
+    "texto": "Se ha sacado el carnet de conducir",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "13_KEVIN.jpeg",
+    "nombre": "KEVIN",
+    "numero": "13",
+    "texto": "Cumple 13 años",
     "tipo": "FOTO"
   }
 ]
