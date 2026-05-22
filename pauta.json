@@ -1,58 +1,142 @@
 [
   {
-    "foto": "01._EMMA.jpeg",
-    "nombre": "EMMA",
+    "foto": "01_MARIA_ISABEL_editada.png",
+    "nombre": "MARIA ISABEL, TORREVIEJA",
     "numero": "01",
-    "texto": "Cumple 20 años",
+    "texto": "Cumple 6 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "02._ERIC.jpeg",
-    "nombre": "ERIC",
-    "numero": "02",
-    "texto": "Cumple 20 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "03._NAHIKARI.jpeg",
-    "nombre": "NAHIKARI",
-    "numero": "03",
-    "texto": "Cumple 20 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "04._SOFIA.jpeg",
-    "nombre": "SOFIA, JAÉN",
-    "numero": "04",
-    "texto": "Cumple 5 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "05._ALBA.jpeg",
-    "nombre": "ALBA",
-    "numero": "05",
-    "texto": "Cumple 11 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "06._IBAI.jpeg",
-    "nombre": "IBAI",
-    "numero": "06",
-    "texto": "Cumple 11 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "07._BERTA.jpeg",
+    "foto": "02_BERTA_editada.png",
     "nombre": "BERTA",
-    "numero": "07",
-    "texto": "Cumple 30 años",
+    "numero": "02",
+    "texto": "Cumple 18 años",
     "tipo": "FOTO"
   },
   {
+    "foto": "03_CANDELA_editada.png",
+    "nombre": "CANDELA",
+    "numero": "03",
+    "texto": "Cumple 19 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "04_LEA_editada.png",
+    "nombre": "LEA",
+    "numero": "04",
+    "texto": "Cumple 45 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "05_ALFONSO_editada.png",
+    "nombre": "ALFONSO",
+    "numero": "05",
+    "texto": "Cumple 65 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "06_JESUS_editada.png",
+    "nombre": "JESUS, SEVILLA",
+    "numero": "06",
+    "texto": "Cumple 40 y ... (no quiere decir la edad)",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "07_TERESA_editada.png",
+    "nombre": "TERESA, CASTELLDEFELS",
+    "numero": "07",
+    "texto": "Cumple 8 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "08_ANA_ISABEL_editada.png",
+    "nombre": "ANA ISABEL",
     "numero": "08",
-    "nombre": "JUANITO",
-    "texto": "Cumple 11 años",
-    "tipo": "FOTO",
-    "foto": "08._juanito.jpeg"
+    "texto": "Cumple 67 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "09_ESTEFANIA_editada.png",
+    "nombre": "ESTEFANIA",
+    "numero": "09",
+    "texto": "El sabado cumple 7 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "10_ENEA_editada.png",
+    "nombre": "ENEA",
+    "numero": "10",
+    "texto": "Cumple 6 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "11_JAVI_Y_AMAIA_editada.png",
+    "nombre": "JAVI Y AMAIA",
+    "numero": "11",
+    "texto": "Cumplen 16 años de casados",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "12_VANE_editada.png",
+    "nombre": "VANE, PLASENCIA",
+    "numero": "12",
+    "texto": "Cumple 46 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "13_ANITA_editada.png",
+    "nombre": "ANITA, CORUÑA",
+    "numero": "13",
+    "texto": "Cumple 49 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "14_JOSE_MARIA_editada.png",
+    "nombre": "JOSE MARIA",
+    "numero": "14",
+    "texto": "",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "15_SONIA_editada.png",
+    "nombre": "SONIA",
+    "numero": "15",
+    "texto": "Cumple 47 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "16_ALBA_editada.png",
+    "nombre": "ALBA, TOSSA",
+    "numero": "16",
+    "texto": "Cumple 22 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "17_PATRICIA_Y_LAURA_editada.png",
+    "nombre": "PATRICIA Y LAURA",
+    "numero": "17",
+    "texto": "Cumplen 17 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "18_ASUN_editada.png",
+    "nombre": "ASUN",
+    "numero": "18",
+    "texto": "Cumple 65 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "19_NIKOLE_editada.png",
+    "nombre": "NIKOLE",
+    "numero": "19",
+    "texto": "Cumple 18 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "20_TEO_editada.png",
+    "nombre": "TEO",
+    "numero": "20",
+    "texto": "Cumple 70 años",
+    "tipo": "FOTO"
   }
 ]

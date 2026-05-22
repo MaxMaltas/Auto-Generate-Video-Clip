@@ -3,6 +3,10 @@
     "20 MINUTOS_NEG.png",
     55
   ],
+  "abc": [
+    "ABC_NEG.png",
+    53
+  ],
   "amp": [
     "MARCA_NEG.png",
     null
@@ -19,6 +23,10 @@
     "CANAL EXTREMADURA_NEG.png",
     60
   ],
+  "canalsur": [
+    "CANAL SUR.png",
+    60
+  ],
   "canarias7": [
     "CANARIAS 7_NEG.png",
     62
@@ -30,6 +38,10 @@
   "cnnespanol": [
     "CNN ESP_NEG.png",
     90
+  ],
+  "computerhoy": [
+    "COMPUTER HOY_NEG.png",
+    78
   ],
   "diariodealmeria": [
     "DIARIO ALMERIA.png",
@@ -45,7 +57,7 @@
   ],
   "diariodesevilla": [
     "DIARIO DE SEVILLA_NEG.png",
-    65
+    69
   ],
   "diariodevalladolid": [
     "DIARIO DE VALLADOLID_NEG.png",
@@ -71,6 +83,10 @@
     "EL DIARIO.png",
     55
   ],
+  "elmundo": [
+    "EL MUNDO_NEG.png",
+    55
+  ],
   "elpais": [
     "EL PAIS_NEG.png",
     55
@@ -78,6 +94,10 @@
   "elperiodic": [
     "EL PERIODICO DE ESPANA HORIZONTAL.png",
     55
+  ],
+  "elperiodico": [
+    "EL PERIODICO_NEG.png",
+    53
   ],
   "elperiodicoextremadura": [
     "EL PERIODICO EXTREMADURA_NEG.png",
@@ -95,6 +115,10 @@
     "ARA_NEG.png",
     null
   ],
+  "europapress": [
+    "EUROPA PRESS_NEG.png",
+    51
+  ],
   "fusernews": [
     "FUSER_NEWS.png",
     60
@@ -102,6 +126,10 @@
   "hola": [
     "HOLA_NEG.png",
     6
+  ],
+  "hoy": [
+    "HOY_NEG.png",
+    55
   ],
   "huffingtonpost": [
     "EL HUFFPOST_NEG.png",
@@ -119,13 +147,17 @@
     "LA OPINION EL CORREO DE ZAMORA_NEG.png",
     65
   ],
+  "larazon": [
+    "LA RAZÓN_NEG.png",
+    56
+  ],
   "lasexta": [
     "LASEXTA_2024_NEG.png",
-    69
+    65
   ],
   "lavanguardia": [
     "LA VANGUARDIA_NEG.png",
-    50
+    53
   ],
   "levante-emv": [
     "LEVANTE_NEG.png",
