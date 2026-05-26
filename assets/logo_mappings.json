@@ -8,8 +8,8 @@
     53
   ],
   "amp": [
-    "MARCA_NEG.png",
-    null
+    "ANTENA 3 NOTICIAS_NEG.png",
+    58
   ],
   "aztecaguerrero": [
     "TV AZTECA_NEG.png",
@@ -50,6 +50,10 @@
   "diariodeavisos": [
     "DIARIO DE AVISOS_NEG.png",
     55
+  ],
+  "diariodecadiz": [
+    "DIARIO DE CADIZ_NEG.png",
+    6
   ],
   "diariodemallorca": [
     "DIARIO DE MALLORCA_NEG.png",
@@ -107,6 +111,10 @@
     "EL PERIODICO MEDITERRANEO_NEG.png",
     55
   ],
+  "elplural": [
+    "EL PLURAL_NEG.png",
+    65
+  ],
   "epe": [
     "EL PERIODICO DE ESPANA HORIZONTAL.png",
     null
@@ -141,7 +149,7 @@
   ],
   "laopiniondemalaga": [
     "LA OPINION DE MALAGA_NEG.png",
-    55
+    60
   ],
   "laopiniondezamora": [
     "LA OPINION EL CORREO DE ZAMORA_NEG.png",
@@ -153,15 +161,15 @@
   ],
   "lasexta": [
     "LASEXTA_2024_NEG.png",
-    65
+    70
   ],
   "lavanguardia": [
     "LA VANGUARDIA_NEG.png",
-    53
+    52
   ],
   "levante-emv": [
     "LEVANTE_NEG.png",
-    65
+    70
   ],
   "libertaddigital": [
     "LIBERTAD DIGITAL_NEG.png",
@@ -173,7 +181,7 @@
   ],
   "malagahoy": [
     "MALAGA HOY_NEG.png",
-    55
+    62
   ],
   "okdiario": [
     "OKDIARIO_NEG.png",

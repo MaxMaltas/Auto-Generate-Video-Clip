@@ -1,93 +1,128 @@
 [
   {
-    "foto": "01._DIANA.jpeg",
-    "nombre": "DIANA",
+    "foto": "01_ROCIO_editada.png",
+    "nombre": "ROCÍO",
     "numero": "01",
-    "texto": "Cumple 20 años",
+    "texto": "Cumple 6 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "02._ANDREA.jpeg",
-    "nombre": "ANDREA",
+    "foto": "02_BEL_editada.png",
+    "nombre": "BEL",
     "numero": "02",
-    "texto": "Cumple 56 años",
+    "texto": "Cumple 60 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "03._ELENA.jpeg",
-    "nombre": "ELENA",
+    "foto": "03_DAVID_editada.png",
+    "nombre": "DAVID, MANRESA",
     "numero": "03",
-    "texto": "El domingo hizo 13 años",
+    "texto": "Cumple 43 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "04_PAULA.jpeg",
-    "nombre": "PAULA Y LAURA",
+    "foto": "04_VICENTA_Y_JUAN_editada.png",
+    "nombre": "VICENTA Y JUAN",
     "numero": "04",
-    "texto": "Cumplen 15 y 46 años",
+    "texto": "Cumplen 37 años de casados",
     "tipo": "FOTO"
   },
   {
-    "foto": "05_AIUR.jpeg",
-    "nombre": "AIUR",
+    "foto": "05_LUCAS_editada.png",
+    "nombre": "LUCAS, TERRASSA",
     "numero": "05",
-    "texto": "Cumple 7 años",
+    "texto": "Cumple 15 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "06_MARIA.jpeg",
-    "nombre": "MARIA",
+    "foto": "06_PEDRO_editada.png",
+    "nombre": "PEDRO",
     "numero": "06",
-    "texto": "Cumple 65 años",
+    "texto": "Cumple 71 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "07_MIGUEL.jpeg",
-    "nombre": "MIGUEL",
+    "foto": "07_JIM_Y_FERNANDO_editada.png",
+    "nombre": "JIM Y FERNANDO",
     "numero": "07",
-    "texto": "Cumple 60 años",
+    "texto": "Cumplen 13 y 80 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "08_JUANMA.jpeg",
-    "nombre": "JUANMA, HUELVA",
+    "foto": "08_CARLOS_editada.png",
+    "nombre": "CARLOS",
     "numero": "08",
-    "texto": "Cumple 17 años",
+    "texto": "Cumple 18 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "09_JUAN.jpeg",
-    "nombre": "JUAN, CUNIT",
+    "foto": "09_MARIVI_editada.png",
+    "nombre": "MARIVI, LINARES",
     "numero": "09",
-    "texto": "Cumple 60 años",
+    "texto": "Cumple 25 años de casada con su pareja",
     "tipo": "FOTO"
   },
   {
-    "foto": "10_INMA.jpeg",
-    "nombre": "INMA",
+    "foto": "10_LEYRE_editada.png",
+    "nombre": "LEYRE",
     "numero": "10",
-    "texto": "Cumple 58 años",
+    "texto": "Cumple 14 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "11_LUIS.jpeg",
-    "nombre": "LUIS",
+    "foto": "11_SAMUEL_editada.png",
+    "nombre": "SAMUEL",
     "numero": "11",
-    "texto": "Le han dado el alta despues de 15 dias ingresado",
+    "texto": "Cumple 9 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "12_PAULA.jpeg",
-    "nombre": "PAULA",
+    "foto": "",
+    "nombre": "BENITO",
     "numero": "12",
-    "texto": "Se ha sacado el carnet de conducir",
+    "texto": "Cumple 100 años",
+    "tipo": "CUBRIR"
+  },
+  {
+    "foto": "13_CELIA_editada.png",
+    "nombre": "CELIA, MADRID",
+    "numero": "13",
+    "texto": "Cumple 11 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "13_KEVIN.jpeg",
-    "nombre": "KEVIN",
-    "numero": "13",
-    "texto": "Cumple 13 años",
+    "foto": "14_ANTONIA_Y_MANOLO_editada.png",
+    "nombre": "ANTONIA Y MANOLO",
+    "numero": "14",
+    "texto": "Celebran 55 años de casados",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "15_FRANK_Y_SONIA_editada.png",
+    "nombre": "FRANK Y SONIA, SANT FELIU",
+    "numero": "15",
+    "texto": "Celebran 25 años de casados",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "16_JUDIT_editada.png",
+    "nombre": "JUDIT, CARCAIXENT",
+    "numero": "16",
+    "texto": "Cumple 29 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "17._MANU_Y_CRIS2_editada.png",
+    "nombre": "MANU Y CRIS",
+    "numero": "17",
+    "texto": "Cumplen 25 años de casados",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "18_NASHWA_editada.png",
+    "nombre": "NASHWA",
+    "numero": "18",
+    "texto": "Cumple 10 años",
     "tipo": "FOTO"
   }
 ]

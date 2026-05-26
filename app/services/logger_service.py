@@ -46,6 +46,10 @@ _ACTION_MAP = {
     ("POST",   "/titulares/logo-mapping"):    "guardar_logo_mapping",
     ("GET",    "/titulares/logo-mapping"):    "ver_logo_mapping",
     ("GET",    "/"):                          "abrir_app",
+    ("POST", "/vmake/upload"):                "vmake_upload",
+    ("POST", "/vmake/procesar"):              "vmake_procesar",
+    ("GET",  "/vmake/estado"):                "vmake_estado",
+    ("GET",  "/vmake/resultado/"):            "vmake_descarga",
 }
 
 
