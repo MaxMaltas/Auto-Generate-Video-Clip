@@ -1,128 +1,121 @@
 [
   {
-    "foto": "01_ROCIO_editada.png",
-    "nombre": "ROCÍO",
+    "foto": "01_OIER_editada.png",
+    "nombre": "OIER",
     "numero": "01",
-    "texto": "Cumple 6 años",
+    "texto": "Cumple 7 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "02_BEL_editada.png",
-    "nombre": "BEL",
+    "foto": "02_YERAY_editada.png",
+    "nombre": "YERAY",
     "numero": "02",
-    "texto": "Cumple 60 años",
+    "texto": "Cumple 27 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "03_DAVID_editada.png",
-    "nombre": "DAVID, MANRESA",
+    "foto": "03_JORGE_Y_CRISTINA_editada.png",
+    "nombre": "JORGE Y CRISTINA",
     "numero": "03",
-    "texto": "Cumple 43 años",
+    "texto": "Los dos cumplen 52 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "04_VICENTA_Y_JUAN_editada.png",
-    "nombre": "VICENTA Y JUAN",
+    "foto": "04_JOSE_editada.png",
+    "nombre": "JOSE",
     "numero": "04",
-    "texto": "Cumplen 37 años de casados",
+    "texto": "Cumple 64 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "05_LUCAS_editada.png",
-    "nombre": "LUCAS, TERRASSA",
+    "foto": "05_KEVIN_editada.png",
+    "nombre": "KEVIN, MANRESA",
     "numero": "05",
-    "texto": "Cumple 15 años",
+    "texto": "Cumple 13 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "06_PEDRO_editada.png",
-    "nombre": "PEDRO",
+    "foto": "06_LUCIA_Y_RAUL_editada.png",
+    "nombre": "LUCÍA Y RAÚL",
     "numero": "06",
-    "texto": "Cumple 71 años",
+    "texto": "Cumplen 41 y 47 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "07_JIM_Y_FERNANDO_editada.png",
-    "nombre": "JIM Y FERNANDO",
+    "foto": "07_LUCIA_editada.png",
+    "nombre": "LUCÍA, PALMA",
     "numero": "07",
-    "texto": "Cumplen 13 y 80 años",
+    "texto": "Cumple 19 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "08_CARLOS_editada.png",
-    "nombre": "CARLOS",
+    "foto": "08_MAGDALENA_editada.png",
+    "nombre": "MAGDALENA",
     "numero": "08",
-    "texto": "Cumple 18 años",
+    "texto": "Cumple 70 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "09_MARIVI_editada.png",
-    "nombre": "MARIVI, LINARES",
+    "foto": "09_MARIBEL_Y_XIMO_editada.png",
+    "nombre": "MARIBEL Y XIMO, CASTELLÓN",
     "numero": "09",
-    "texto": "Cumple 25 años de casada con su pareja",
+    "texto": "Cumplen 52 años de casados",
     "tipo": "FOTO"
   },
   {
-    "foto": "10_LEYRE_editada.png",
-    "nombre": "LEYRE",
+    "foto": "10_MARINA_editada.png",
+    "nombre": "MARINA",
     "numero": "10",
-    "texto": "Cumple 14 años",
+    "texto": "Cumple 13 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "11_SAMUEL_editada.png",
-    "nombre": "SAMUEL",
+    "foto": "11_MOISES_Y_JORGE_editada.png",
+    "nombre": "MOISÉS Y JORGE",
     "numero": "11",
-    "texto": "Cumple 9 años",
+    "texto": "Son padre e hijo. Cumplen 44 y 5 años con un día de diferencia",
     "tipo": "FOTO"
   },
   {
-    "foto": "",
-    "nombre": "BENITO",
+    "foto": "12_MONTSE_editada.png",
+    "nombre": "MONTSE. MOLLET",
     "numero": "12",
-    "texto": "Cumple 100 años",
-    "tipo": "CUBRIR"
+    "texto": "Cumple 58 años",
+    "tipo": "FOTO"
   },
   {
-    "foto": "13_CELIA_editada.png",
-    "nombre": "CELIA, MADRID",
+    "foto": "13_ROBERTO_editada.png",
+    "nombre": "ROBERTO",
     "numero": "13",
-    "texto": "Cumple 11 años",
+    "texto": "Ha terminado su sexto Camino de Santiago",
     "tipo": "FOTO"
   },
   {
-    "foto": "14_ANTONIA_Y_MANOLO_editada.png",
-    "nombre": "ANTONIA Y MANOLO",
+    "foto": "14_VALERIA_editada.png",
+    "nombre": "VALERIA",
     "numero": "14",
-    "texto": "Celebran 55 años de casados",
+    "texto": "Cumple 12 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "15_FRANK_Y_SONIA_editada.png",
-    "nombre": "FRANK Y SONIA, SANT FELIU",
+    "foto": "15_VICTORIANO_editada.png",
+    "nombre": "VICTORIANO",
     "numero": "15",
-    "texto": "Celebran 25 años de casados",
+    "texto": "Cumple 92 años",
     "tipo": "FOTO"
   },
   {
-    "foto": "16_JUDIT_editada.png",
-    "nombre": "JUDIT, CARCAIXENT",
+    "foto": "16_MARC_editada.png",
+    "nombre": "MARC",
     "numero": "16",
-    "texto": "Cumple 29 años",
+    "texto": "Ha publicado su primer thriller, \"El niño 194\"",
     "tipo": "FOTO"
   },
   {
-    "foto": "17._MANU_Y_CRIS2_editada.png",
-    "nombre": "MANU Y CRIS",
+    "foto": "17_BRIGIDA_editada.png",
+    "nombre": "BRÍGIDA, EL PUERTO DE SANTA MARÍA",
     "numero": "17",
-    "texto": "Cumplen 25 años de casados",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "18_NASHWA_editada.png",
-    "nombre": "NASHWA",
-    "numero": "18",
-    "texto": "Cumple 10 años",
+    "texto": "Cumple 90 años",
     "tipo": "FOTO"
   }
 ]
