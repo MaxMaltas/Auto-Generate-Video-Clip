@@ -4,12 +4,16 @@
     55
   ],
   "abc": [
-    "ABC_NEG.png",
+    "DAILY_NEWS.png",
     53
   ],
   "amp": [
     "ANTENA 3 NOTICIAS_NEG.png",
     58
+  ],
+  "as": [
+    "AS_NEG.png",
+    56
   ],
   "aztecaguerrero": [
     "TV AZTECA_NEG.png",
@@ -42,6 +46,10 @@
   "computerhoy": [
     "COMPUTER HOY_NEG.png",
     78
+  ],
+  "dailymail": [
+    "DAILY_NEWS.png",
+    55
   ],
   "diariodealmeria": [
     "DIARIO ALMERIA.png",
@@ -127,6 +135,10 @@
     "EUROPA PRESS_NEG.png",
     51
   ],
+  "facebook": [
+    "TRANSPARENT.png",
+    55
+  ],
   "fusernews": [
     "FUSER_NEWS.png",
     60
@@ -190,6 +202,10 @@
   "ondacero": [
     "ONDA CERO_NEG.png",
     80
+  ],
+  "perfil": [
+    "PERFIL.png",
+    75
   ],
   "segre": [
     "SEGRE_NEG.png",

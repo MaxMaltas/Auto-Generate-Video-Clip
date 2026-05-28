@@ -1,121 +1,100 @@
 [
   {
-    "foto": "01_OIER_editada.png",
-    "nombre": "OIER",
     "numero": "01",
-    "texto": "Cumple 7 años",
-    "tipo": "FOTO"
+    "nombre": "EMILIO",
+    "texto": "Cumple 73 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "02_YERAY_editada.png",
-    "nombre": "YERAY",
     "numero": "02",
-    "texto": "Cumple 27 años",
-    "tipo": "FOTO"
+    "nombre": "ANA, CIUDAD REAL",
+    "texto": "Cumple 36 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "03_JORGE_Y_CRISTINA_editada.png",
-    "nombre": "JORGE Y CRISTINA",
     "numero": "03",
-    "texto": "Los dos cumplen 52 años",
-    "tipo": "FOTO"
+    "nombre": "MARÍA, LEÓN",
+    "texto": "Cumple 22 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "04_JOSE_editada.png",
-    "nombre": "JOSE",
     "numero": "04",
-    "texto": "Cumple 64 años",
-    "tipo": "FOTO"
+    "nombre": "FABIÁN",
+    "texto": "Acaba de hacer su primera comunión",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "05_KEVIN_editada.png",
-    "nombre": "KEVIN, MANRESA",
     "numero": "05",
+    "nombre": "MARTÍ",
     "texto": "Cumple 13 años",
-    "tipo": "FOTO"
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "06_LUCIA_Y_RAUL_editada.png",
-    "nombre": "LUCÍA Y RAÚL",
     "numero": "06",
-    "texto": "Cumplen 41 y 47 años",
-    "tipo": "FOTO"
+    "nombre": "ARIANA, TOLEDO",
+    "texto": "Cumple 15 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "07_LUCIA_editada.png",
-    "nombre": "LUCÍA, PALMA",
     "numero": "07",
-    "texto": "Cumple 19 años",
-    "tipo": "FOTO"
+    "nombre": "ANTONIO, ALMERÍA",
+    "texto": "Cumple 51 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "08_MAGDALENA_editada.png",
-    "nombre": "MAGDALENA",
     "numero": "08",
-    "texto": "Cumple 70 años",
-    "tipo": "FOTO"
+    "nombre": "EDU, CERDANYOLA DEL VALLES",
+    "texto": "Cumple 48 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "09_MARIBEL_Y_XIMO_editada.png",
-    "nombre": "MARIBEL Y XIMO, CASTELLÓN",
     "numero": "09",
-    "texto": "Cumplen 52 años de casados",
-    "tipo": "FOTO"
+    "nombre": "INFANTIL B FEMENINO DEL CLIB DE FÚTBOL CASTELLDEFELS",
+    "texto": "Han ganado la liga y su entrenador se ha tatuado todos sus nombres",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "10_MARINA_editada.png",
-    "nombre": "MARINA",
     "numero": "10",
-    "texto": "Cumple 13 años",
-    "tipo": "FOTO"
+    "nombre": "PABLO",
+    "texto": "Cumple 47 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "11_MOISES_Y_JORGE_editada.png",
-    "nombre": "MOISÉS Y JORGE",
     "numero": "11",
-    "texto": "Son padre e hijo. Cumplen 44 y 5 años con un día de diferencia",
-    "tipo": "FOTO"
+    "nombre": "CARLOTA Y CLAUDIA",
+    "texto": "Cumplen 14 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "12_MONTSE_editada.png",
-    "nombre": "MONTSE. MOLLET",
     "numero": "12",
-    "texto": "Cumple 58 años",
-    "tipo": "FOTO"
+    "nombre": "JAUME, SANT SALVADOR",
+    "texto": "Cumple 14 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "13_ROBERTO_editada.png",
-    "nombre": "ROBERTO",
     "numero": "13",
-    "texto": "Ha terminado su sexto Camino de Santiago",
-    "tipo": "FOTO"
+    "nombre": "FLAVIO",
+    "texto": "Cumple 13 años",
+    "tipo": "FOTO",
+    "foto": ""
   },
   {
-    "foto": "14_VALERIA_editada.png",
-    "nombre": "VALERIA",
     "numero": "14",
-    "texto": "Cumple 12 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "15_VICTORIANO_editada.png",
-    "nombre": "VICTORIANO",
-    "numero": "15",
-    "texto": "Cumple 92 años",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "16_MARC_editada.png",
-    "nombre": "MARC",
-    "numero": "16",
-    "texto": "Ha publicado su primer thriller, \"El niño 194\"",
-    "tipo": "FOTO"
-  },
-  {
-    "foto": "17_BRIGIDA_editada.png",
-    "nombre": "BRÍGIDA, EL PUERTO DE SANTA MARÍA",
-    "numero": "17",
+    "nombre": "AGUSTINA",
     "texto": "Cumple 90 años",
-    "tipo": "FOTO"
+    "tipo": "FOTO",
+    "foto": ""
   }
 ]
