@@ -1,7 +1,7 @@
 {
   "20minutos": [
     "20 MINUTOS_NEG.png",
-    55
+    57
   ],
   "abc": [
     "DAILY_NEWS.png",
@@ -11,6 +11,10 @@
     "ANTENA 3 NOTICIAS_NEG.png",
     58
   ],
+  "antena3": [
+    "ANTENA 3_NEG.png",
+    56
+  ],
   "as": [
     "AS_NEG.png",
     56
@@ -18,6 +22,10 @@
   "aztecaguerrero": [
     "TV AZTECA_NEG.png",
     null
+  ],
+  "c5n": [
+    "C5N.png",
+    65
   ],
   "cadenaser": [
     "CADENA SER_NEG.png",
@@ -29,11 +37,15 @@
   ],
   "canalsur": [
     "CANAL SUR.png",
-    60
+    65
   ],
   "canarias7": [
     "CANARIAS 7_NEG.png",
     62
+  ],
+  "ceutatv": [
+    "INFOBAE_NEG.png",
+    65
   ],
   "cmmedia": [
     "CMM_NEG.png",
@@ -53,7 +65,7 @@
   ],
   "diariodealmeria": [
     "DIARIO ALMERIA.png",
-    null
+    54
   ],
   "diariodeavisos": [
     "DIARIO DE AVISOS_NEG.png",
@@ -69,15 +81,27 @@
   ],
   "diariodesevilla": [
     "DIARIO DE SEVILLA_NEG.png",
-    69
+    75
   ],
   "diariodevalladolid": [
     "DIARIO DE VALLADOLID_NEG.png",
-    null
+    53
+  ],
+  "diariojaen": [
+    "DIARIO JAEN_NEG.png",
+    55
+  ],
+  "diezminutos": [
+    "DIEZ MINUTOS_NEG.png",
+    60
   ],
   "elcorreo": [
     "EL CORREO_NEG.png",
     null
+  ],
+  "elcorreoweb": [
+    "EL CORREO DE ANDALUCIA_NEG.png",
+    57
   ],
   "eldebate": [
     "EL DEBATE_NEG.png",
@@ -93,15 +117,27 @@
   ],
   "eldiario": [
     "EL DIARIO.png",
-    55
+    58
+  ],
+  "elespanol": [
+    "EL ESPANOL_NEG.png",
+    59
+  ],
+  "elmotero": [
+    "TU_MOTERO.png",
+    65
   ],
   "elmundo": [
     "EL MUNDO_NEG.png",
     55
   ],
+  "elnortedecastilla": [
+    "EL NORTE DE CASTILLA_NEG.png",
+    63
+  ],
   "elpais": [
     "EL PAIS_NEG.png",
-    55
+    65
   ],
   "elperiodic": [
     "EL PERIODICO DE ESPANA HORIZONTAL.png",
@@ -109,7 +145,7 @@
   ],
   "elperiodico": [
     "EL PERIODICO_NEG.png",
-    53
+    60
   ],
   "elperiodicoextremadura": [
     "EL PERIODICO EXTREMADURA_NEG.png",
@@ -139,6 +175,10 @@
     "TRANSPARENT.png",
     55
   ],
+  "farodevigo": [
+    "FARO DE VIGO_NEG.png",
+    55
+  ],
   "fusernews": [
     "FUSER_NEWS.png",
     60
@@ -159,6 +199,10 @@
     "INFOBAE_NEG.png",
     6
   ],
+  "laciutat": [
+    "Captura_de_pantalla_2026-06-10_081611.png",
+    65
+  ],
   "laopiniondemalaga": [
     "LA OPINION DE MALAGA_NEG.png",
     60
@@ -177,7 +221,11 @@
   ],
   "lavanguardia": [
     "LA VANGUARDIA_NEG.png",
-    52
+    59
+  ],
+  "lavozdelsur": [
+    "LA VOZ_NEG.png",
+    65
   ],
   "levante-emv": [
     "LEVANTE_NEG.png",
@@ -193,7 +241,7 @@
   ],
   "malagahoy": [
     "MALAGA HOY_NEG.png",
-    62
+    70
   ],
   "okdiario": [
     "OKDIARIO_NEG.png",
@@ -206,6 +254,10 @@
   "perfil": [
     "PERFIL.png",
     75
+  ],
+  "periodicodeibiza": [
+    "PERIODICO_DE_IBIZA.png",
+    null
   ],
   "segre": [
     "SEGRE_NEG.png",

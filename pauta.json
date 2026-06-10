@@ -1,100 +1,93 @@
 [
   {
+    "foto": "01_JAVIER_editada.png",
+    "nombre": "JAVIER, VALENCIA",
     "numero": "01",
-    "nombre": "EMILIO",
-    "texto": "Cumple 73 años",
-    "tipo": "FOTO",
-    "foto": ""
+    "texto": "Se gradúa de Educación Infantil",
+    "tipo": "FOTO"
   },
   {
+    "foto": "02_FELIX_editada.png",
+    "nombre": "FÉLIX",
     "numero": "02",
-    "nombre": "ANA, CIUDAD REAL",
-    "texto": "Cumple 36 años",
-    "tipo": "FOTO",
-    "foto": ""
+    "texto": "Cumple 63 años",
+    "tipo": "FOTO"
   },
   {
+    "foto": "03_NURIA_editada.png",
+    "nombre": "NURIA",
     "numero": "03",
-    "nombre": "MARÍA, LEÓN",
-    "texto": "Cumple 22 años",
-    "tipo": "FOTO",
-    "foto": ""
+    "texto": "Cumple 52 años",
+    "tipo": "FOTO"
   },
   {
+    "foto": "04_LIDIA_editada.png",
+    "nombre": "LIDIA",
     "numero": "04",
-    "nombre": "FABIÁN",
-    "texto": "Acaba de hacer su primera comunión",
-    "tipo": "FOTO",
-    "foto": ""
+    "texto": "Cumple 71 años",
+    "tipo": "FOTO"
   },
   {
+    "foto": "05_ALEX_editada.png",
+    "nombre": "ÁLEX, MADRID",
     "numero": "05",
-    "nombre": "MARTÍ",
-    "texto": "Cumple 13 años",
-    "tipo": "FOTO",
-    "foto": ""
-  },
-  {
-    "numero": "06",
-    "nombre": "ARIANA, TOLEDO",
-    "texto": "Cumple 15 años",
-    "tipo": "FOTO",
-    "foto": ""
-  },
-  {
-    "numero": "07",
-    "nombre": "ANTONIO, ALMERÍA",
-    "texto": "Cumple 51 años",
-    "tipo": "FOTO",
-    "foto": ""
-  },
-  {
-    "numero": "08",
-    "nombre": "EDU, CERDANYOLA DEL VALLES",
-    "texto": "Cumple 48 años",
-    "tipo": "FOTO",
-    "foto": ""
-  },
-  {
-    "numero": "09",
-    "nombre": "INFANTIL B FEMENINO DEL CLIB DE FÚTBOL CASTELLDEFELS",
-    "texto": "Han ganado la liga y su entrenador se ha tatuado todos sus nombres",
-    "tipo": "FOTO",
-    "foto": ""
-  },
-  {
-    "numero": "10",
-    "nombre": "PABLO",
     "texto": "Cumple 47 años",
-    "tipo": "FOTO",
-    "foto": ""
+    "tipo": "FOTO"
   },
   {
-    "numero": "11",
-    "nombre": "CARLOTA Y CLAUDIA",
-    "texto": "Cumplen 14 años",
-    "tipo": "FOTO",
-    "foto": ""
+    "foto": "06_ANGEL_editada.png",
+    "nombre": "ÁNGEL",
+    "numero": "06",
+    "texto": "Cumple 50 años",
+    "tipo": "FOTO"
   },
   {
-    "numero": "12",
-    "nombre": "JAUME, SANT SALVADOR",
+    "foto": "07_GLORIA_editada.png",
+    "nombre": "GLORIA",
+    "numero": "07",
+    "texto": "Cumple 84 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "08_ERIC_editada.png",
+    "nombre": "ERIC",
+    "numero": "08",
     "texto": "Cumple 14 años",
-    "tipo": "FOTO",
-    "foto": ""
+    "tipo": "FOTO"
   },
   {
+    "foto": "09_LAURA_editada.png",
+    "nombre": "LAURA",
+    "numero": "09",
+    "texto": "Cumple 37 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "10_PASTORA_editada.png",
+    "nombre": "PASTORA, CANTILLANA (SEVILLA)",
+    "numero": "10",
+    "texto": "",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "11_GERARD_editada.png",
+    "nombre": "GERARD, CALELLA",
+    "numero": "11",
+    "texto": "Cumple 27 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "12_JAN_editada.png",
+    "nombre": "JAN, REUS",
+    "numero": "12",
+    "texto": "Cumple 11 años",
+    "tipo": "FOTO"
+  },
+  {
+    "foto": "13_ESTEBAN_editada.png",
+    "nombre": "ESTEBAN",
     "numero": "13",
-    "nombre": "FLAVIO",
-    "texto": "Cumple 13 años",
-    "tipo": "FOTO",
-    "foto": ""
-  },
-  {
-    "numero": "14",
-    "nombre": "AGUSTINA",
-    "texto": "Cumple 90 años",
-    "tipo": "FOTO",
-    "foto": ""
+    "texto": "Cumple 55 años",
+    "tipo": "FOTO"
   }
 ]
