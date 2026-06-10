@@ -183,6 +183,10 @@
     "FUSER_NEWS.png",
     60
   ],
+  "hipertextual": [
+    "HUELVA INFORMACION_NEG.png",
+    65
+  ],
   "hola": [
     "HOLA_NEG.png",
     6
@@ -218,6 +222,10 @@
   "lasexta": [
     "LASEXTA_2024_NEG.png",
     70
+  ],
+  "latimes": [
+    "los_angeles_times.png",
+    55
   ],
   "lavanguardia": [
     "LA VANGUARDIA_NEG.png",
