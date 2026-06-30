@@ -521,14 +521,14 @@ function scheduleAutoSave() {
 }
 
 function showTab(id) {
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','editor','clips','titulares'][i]===id));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['pauta','editor','clips','titulares','vmake'][i]===id));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(id==='clips') cargarClips();
   if(id==='pauta') cargarFotos();
   if(id==='editor') initEditor();
-  if(id==='titulares') { tCargarLogos(); tCargarSecciones();
-  if(id==='vmake') { vmakeInit(); } }
+  if(id==='titulares') { tCargarLogos(); tCargarSecciones(); }
+  if(id==='vmake') vmakeInit();
 }
 
 // ── DRAG & DROP ──
@@ -1607,16 +1607,41 @@ const vmake = {
 // ── Init (drag & drop) ────────────────────────────────────────────────────────
 function vmakeInit() {
   const dz = document.getElementById('vmake-drop');
-  if (dz._vmakeInit) return;
+  const input = document.getElementById('vmake-file-input');
+  if (!dz || dz._vmakeInit) return;
   dz._vmakeInit = true;
-  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('over'); });
-  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+
+  // Permite soltar archivos arrastrados desde el explorador sobre toda la zona visible.
+  ['dragenter', 'dragover'].forEach(type => {
+    dz.addEventListener(type, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      dz.classList.add('over');
+    });
+  });
+
+  ['dragleave', 'dragend'].forEach(type => {
+    dz.addEventListener(type, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dz.classList.remove('over');
+    });
+  });
+
   dz.addEventListener('drop', e => {
     e.preventDefault();
+    e.stopPropagation();
     dz.classList.remove('over');
-    const file = e.dataTransfer.files[0];
+
+    const files = e.dataTransfer ? e.dataTransfer.files : null;
+    const file = files && files.length ? files[0] : null;
     if (file) vmakeUpload(file);
   });
+
+  if (input) {
+    input.addEventListener('click', e => e.stopPropagation());
+  }
 }
 
 // ── Upload ────────────────────────────────────────────────────────────────────
