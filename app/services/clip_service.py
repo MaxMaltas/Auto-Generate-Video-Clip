@@ -1,5 +1,6 @@
 import re
 import threading
+from collections import Counter
 import ffmpeg
 
 from app.core.config import (
@@ -52,12 +53,16 @@ def run_make_clips():
     estado["total"] = len(pauta)
     estado["log"].append(f"ℹ Procesando {len(pauta)} clips...")
 
+    vistos = Counter()
     for row in pauta:
-        procesar_clip(row)
+        clave = (_safe_name(row["numero"]).zfill(2), _safe_name(row["nombre"].upper()))
+        vistos[clave] += 1
+        sufijo = f"_{vistos[clave]}" if vistos[clave] > 1 else ""
+        procesar_clip(row, sufijo)
 
     estado["running"] = False
 
-def procesar_clip(row):
+def procesar_clip(row, sufijo=""):
     numero = _safe_name(row["numero"]).zfill(2)
     nombre = _safe_name(row["nombre"].upper())
 
@@ -73,9 +78,9 @@ def procesar_clip(row):
         return
 
     foto_path = INPUT / foto_filename
-    salida = OUTPUT / f"{numero} {nombre}.mp4"
+    salida = OUTPUT / f"{numero} {nombre}{sufijo}.mp4"
 
-    estado["log"].append(f"→ [{numero}] {nombre}...")
+    estado["log"].append(f"→ [{numero}] {nombre}{sufijo}...")
 
     if not foto_path.exists():
         estado["log"].append(f'✗ Foto no encontrada: {row["foto"]}')
@@ -148,7 +153,7 @@ def procesar_clip(row):
             )
 
         estado["done"] += 1
-        estado["log"].append(f"✓ {numero} {nombre}.mp4")
+        estado["log"].append(f"✓ {numero} {nombre}{sufijo}.mp4")
 
     except Exception as e:
         estado["errors"] += 1
