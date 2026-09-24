@@ -560,24 +560,73 @@ async function subirFotos(files) {
   await aplicarAutorelleno(subidos);
 }
 
+// Acepta "03_NOMBRE_texto.jpg", "03_NOMBRE.jpg", "03 cualquier cosa.png", "3-foto.jpg"...
+// numero es null si el nombre no empieza por dígitos.
 function parsearNombreArchivo(nombreOriginal) {
-  const m = /^(\d+)_([^_]+)_(.+)\.(jpe?g|png)$/i.exec(nombreOriginal || '');
-  if (!m) return null;
-  return { numero: m[1], nombre: m[2].trim().toUpperCase(), texto: m[3].trim() };
+  const base = String(nombreOriginal || '').replace(/\.[^.]+$/, '');
+  const m = /^(\d+)[\s_\-.]*(.*)$/.exec(base);
+  if (!m) return { numero: null, nombre: '', texto: '' };
+  const numero = m[1].padStart(2, '0');
+  const resto = m[2];
+  // Solo el formato con guiones bajos aporta nombre/texto (NN_NOMBRE_texto)
+  if (!/^\d+_/.test(base) || !resto) return { numero, nombre: '', texto: '' };
+  const [nombre, ...texto] = resto.split('_');
+  return { numero, nombre: nombre.trim().toUpperCase(), texto: texto.join('_').trim() };
+}
+
+function mismoNumero(a, b) {
+  const na = parseInt(a, 10), nb = parseInt(b, 10);
+  return isNaN(na) || isNaN(nb) ? String(a) === String(b) : na === nb;
+}
+
+function siguienteNumero() {
+  const nums = pautaData.map(r => parseInt(r.numero, 10)).filter(n => !isNaN(n));
+  return String((nums.length ? Math.max(...nums) : 0) + 1).padStart(2, '0');
 }
 
 async function aplicarAutorelleno(subidos) {
   let cambio = false;
-  for (const { original, filename } of subidos) {
+  const ordenados = [...subidos].sort((a, b) =>
+    a.original.localeCompare(b.original, undefined, { numeric: true, sensitivity: 'base' }));
+  for (const { original, filename } of ordenados) {
     const parsed = parsearNombreArchivo(original);
-    if (!parsed) continue;
-    const row = pautaData.find(r => r.numero === parsed.numero);
-    if (row) {
-      row.foto = filename;
-      if (!row.nombre) row.nombre = parsed.nombre;
-      if (!row.texto) row.texto = parsed.texto;
+
+    // Foto sin número al inicio: primera fila vacía, o nueva fila al final
+    if (!parsed.numero) {
+      if (pautaData.some(r => r.foto === filename)) continue;
+      const vacia = pautaData.find(r => !r.foto && !r.nombre && !r.texto);
+      if (vacia) vacia.foto = filename;
+      else pautaData.push({ numero: siguienteNumero(), nombre: '', texto: '', tipo: 'FOTO', foto: filename });
+      cambio = true;
+      continue;
+    }
+
+    const nuevaFila = { numero: parsed.numero, nombre: parsed.nombre, texto: parsed.texto, tipo: 'FOTO', foto: filename };
+
+    // Foto ya presente en la pauta (re-subida): no duplicar fila
+    const existente = pautaData.find(r => r.foto === filename);
+    if (existente) {
+      if (!existente.nombre) existente.nombre = parsed.nombre;
+      if (!existente.texto) existente.texto = parsed.texto;
+      cambio = true;
+      continue;
+    }
+
+    const indices = pautaData.reduce((acc, r, i) => (mismoNumero(r.numero, parsed.numero) ? [...acc, i] : acc), []);
+    const libre = indices.map(i => pautaData[i]).find(r => !r.foto);
+    if (libre) {
+      libre.foto = filename;
+      if (!libre.nombre) libre.nombre = parsed.nombre;
+      if (!libre.texto) libre.texto = parsed.texto;
+    } else if (indices.length) {
+      // Número repetido: nueva fila justo después de la última con ese número
+      pautaData.splice(indices[indices.length - 1] + 1, 0, nuevaFila);
     } else {
-      pautaData.push({ numero: parsed.numero, nombre: parsed.nombre, texto: parsed.texto, tipo: 'FOTO', foto: filename });
+      // Número nuevo: insertar en su posición numérica
+      const num = parseInt(parsed.numero, 10);
+      const pos = pautaData.findIndex(r => parseInt(r.numero, 10) > num);
+      if (pos === -1) pautaData.push(nuevaFila);
+      else pautaData.splice(pos, 0, nuevaFila);
     }
     cambio = true;
   }
@@ -597,9 +646,13 @@ async function cargarPautaDesdeServidor() {
   const r = await fetch('/pauta');
   const d = await r.json();
   pautaData = d.data && d.data.length ? d.data : [{numero:'01',nombre:'',texto:'',tipo:'FOTO',foto:''}];
+  const usadas = new Set(pautaData.map(r => r.foto).filter(Boolean));
   pautaData.forEach(row => {
     row.tipo = normalizarTipoPauta(row.tipo);
-    if (!row.foto) row.foto = autoAsignarFoto(row.numero);
+    if (!row.foto) {
+      row.foto = autoAsignarFoto(row.numero, usadas);
+      if (row.foto) usadas.add(row.foto);
+    }
   });
   lastKnownMtime = d.mtime || 0;
   renderPauta();
@@ -609,8 +662,9 @@ function esc(str) {
   return String(str||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function autoAsignarFoto(numero) {
+function autoAsignarFoto(numero, usadas = new Set()) {
   return fotosDisponibles.find(f => {
+    if (usadas.has(f)) return false;
     const sinExt = f.replace(/\.[^.]+$/, '');
     return sinExt === numero || sinExt.startsWith(numero + '_');
   }) || '';
@@ -674,7 +728,7 @@ function addRow() {
     nombre: '',
     texto: '',
     tipo: 'FOTO',
-    foto: autoAsignarFoto(nextNum)
+    foto: autoAsignarFoto(nextNum, new Set(pautaData.map(r => r.foto).filter(Boolean)))
   });
   renderPauta();
   scheduleAutoSave();
